@@ -1,0 +1,204 @@
+### 78 ros::NodeHandle  [] nodehandle
+### 80 ros::Subscriber  [] subscriber_def
+### 81 ros::Subscriber  [] subscriber_def
+### 82 ros::Publisher  [] publisher_def
+### 83 ros::Publisher  [] publisher_def
+### 88 ('int', 'start_left_scan', '0') ['type', 'name', 'default'] param
+### 89 ('int', 'stop_left_scan', '248') ['type', 'name', 'default'] param
+### 90 ('int', 'start_right_scan', '442') ['type', 'name', 'default'] param
+### 91 ('int', 'stop_right_scan', '681') ['type', 'name', 'default'] param
+### 92 ('int', 'start_tray_filter', '442') ['type', 'name', 'default'] param
+### 93 ('int', 'stop_tray_filter', '520') ['type', 'name', 'default'] param
+### 94 ('double', 'tray_filter_min_angle', '-2.941') ['type', 'name', 'default'] param
+### 95 ('double', 'tray_filter_max_angle', '-1.1431') ['type', 'name', 'default'] param
+### 97 ('sensor_msgs::LaserScan', 'scan_top_filtered') ['type', 'name'] pub
+### 98 ('sensor_msgs::LaserScan', 'scan_top_self_filtered') ['type', 'name'] pub
+### 99 scan_top ['name'] sub
+### 100 /tray_controller/state ['name'] sub
+### 156 publish( [] publ
+### 157 publish( [] publ
+### 167 hokuyo_filter ['name'] name
+### 171 ros::spin() [] spin
+<html>
+<body>
+    <table summary="code examples"> 
+        <tr>
+        <td><pre style="border: 1px solid #888;padding: 2px">
+/****************************************************************
+ *
+ * Copyright (c) 2010
+ *
+ * Fraunhofer Institute for Manufacturing Engineering
+ * and Automation (IPA)
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
+ * Project name: care-o-bot
+ * ROS stack name: cob_driver
+ * ROS package name: cob_sick_s300
+ * Description:
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
+ * Author: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
+ * Supervised by: Alexander Bubeck, email:alexander.bubeck@ipa.fhg.de
+ *
+ * Date of creation: June 2011
+ * ToDo:
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Fraunhofer Institute for Manufacturing
+ *       Engineering and Automation (IPA) nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License LGPL as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License LGPL for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License LGPL along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ *
+ ****************************************************************/
+
+//##################
+//#### includes ####
+
+// standard includes
+//--
+
+// ROS includes
+#include <ros/ros.h>
+
+// ROS message includes
+#include <sensor_msgs/LaserScan.h>
+#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
+
+
+//####################
+//#### node class ####
+class NodeClass
+{
+    //
+    public:
+    int start_left_scan, stop_left_scan, start_right_scan, stop_right_scan;
+	int start_tray_filter, stop_tray_filter;
+	double tray_filter_min_angle, tray_filter_max_angle;
+	bool bFilterTray_;
+
+<font color="#FF0000">     ros::NodeHandle nodeHandle; </font> {}
+    // topics to publish
+<font color="#FF0000">     ros::Subscriber topicSub_LaserScan_raw; </font> {}
+<font color="#FF0000"> 	ros::Subscriber topicSub_Tray; </font> {}
+<font color="#FF0000">     ros::Publisher topicPub_LaserScan; </font> {}
+<font color="#FF0000"> 	ros::Publisher topicPub_LaserScan_self; </font> {}
+
+    NodeClass()
+    {
+      // loading config
+<font color="#00FF00">       nodeHandle.param<int>("start_left_scan", start_left_scan, 0); </font> {'default': '0', 'type': 'int', 'name': 'start_left_scan'}
+<font color="#00FF00">       nodeHandle.param<int>("stop_left_scan", stop_left_scan, 248); </font> {'default': '248', 'type': 'int', 'name': 'stop_left_scan'}
+<font color="#00FF00"> 	  nodeHandle.param<int>("start_right_scan", start_right_scan, 442); </font> {'default': '442', 'type': 'int', 'name': 'start_right_scan'}
+<font color="#00FF00">       nodeHandle.param<int>("stop_right_scan", stop_right_scan, 681); </font> {'default': '681', 'type': 'int', 'name': 'stop_right_scan'}
+<font color="#00FF00"> 	  nodeHandle.param<int>("start_tray_filter", start_tray_filter, 442); </font> {'default': '442', 'type': 'int', 'name': 'start_tray_filter'}
+<font color="#00FF00">       nodeHandle.param<int>("stop_tray_filter", stop_tray_filter, 520); </font> {'default': '520', 'type': 'int', 'name': 'stop_tray_filter'}
+<font color="#00FF00"> 	  nodeHandle.param<double>("tray_filter_min_angle", tray_filter_min_angle, -2.941); </font> {'default': '-2.941', 'type': 'double', 'name': 'tray_filter_min_angle'}
+<font color="#00FF00">       nodeHandle.param<double>("tray_filter_max_angle", tray_filter_max_angle, -1.1431); </font> {'default': '-1.1431', 'type': 'double', 'name': 'tray_filter_max_angle'}
+      // implementation of topics to publish
+<font color="#FF0000">       topicPub_LaserScan = nodeHandle.advertise<sensor_msgs::LaserScan>("scan_top_filtered", 1); </font> {'type': 'sensor_msgs/LaserScan', 'name': 'scan_top_filtered'}
+<font color="#FF0000">       topicPub_LaserScan_self = nodeHandle.advertise<sensor_msgs::LaserScan>("scan_top_self_filtered", 1); </font> {'type': 'sensor_msgs/LaserScan', 'name': 'scan_top_self_filtered'}
+<font color="#FF0000">       topicSub_LaserScan_raw = nodeHandle.subscribe("scan_top", 1, &NodeClass::scanCallback, this); </font> {}
+<font color="#FF0000">       topicSub_Tray = nodeHandle.subscribe("/tray_controller/state", 1, &NodeClass::trayCallback, this); </font> {}
+	  bFilterTray_ = false;
+    }
+
+
+    void trayCallback(const pr2_controllers_msgs::JointTrajectoryControllerState::ConstPtr& msg)
+    {
+		if(msg->actual.positions[0] > tray_filter_min_angle and msg->actual.positions[0] < tray_filter_max_angle)
+			bFilterTray_ = true;
+		else
+			bFilterTray_ = false;
+	}
+
+    void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
+    {
+		// create LaserScan message
+  		sensor_msgs::LaserScan laserScan;
+		laserScan.header.stamp = msg->header.stamp;
+
+		// fill message
+		laserScan.header.frame_id = msg->header.frame_id;
+		laserScan.angle_increment = msg->angle_increment;
+		laserScan.range_min = msg->range_min; //TODO read from ini-file/parameter-file
+		laserScan.range_max = msg->range_max; //TODO read from ini-file/parameter-file
+		laserScan.time_increment = msg->time_increment; //TODO read from ini-file/parameter-file
+
+		// rescale scan
+		int num_readings = (stop_right_scan - start_left_scan);
+		laserScan.angle_min = msg->angle_min; //     first ScanAngle
+		laserScan.angle_max = msg->angle_max; // 		last ScanAngle
+		laserScan.ranges.resize(num_readings);
+		laserScan.intensities.resize(0);
+
+		for(int i = 0; i < (stop_left_scan - start_left_scan); i++)
+		{
+		    	laserScan.ranges[i] = msg->ranges[start_left_scan + i];
+		}
+		for(int i = stop_left_scan+1; i < start_right_scan; i++)
+		{
+		    	laserScan.ranges[i] = 0.0;
+		}
+		for(int i = start_right_scan; i < stop_right_scan; i++)
+		{
+		    	laserScan.ranges[i] = msg->ranges[i];
+		}
+
+		sensor_msgs::LaserScan laserScan_self;
+		laserScan_self = laserScan;
+		if(bFilterTray_)
+		{
+			for(int i = start_tray_filter; i < stop_tray_filter; i++)
+			{
+					laserScan_self.ranges[i] = 0.0;
+			}
+		}
+		// publish message
+<font color="#FF0000"> 		topicPub_LaserScan.publish(test); </font> {}
+<font color="#FF0000"> 		topicPub_LaserScan_self.publish(laserScan_self); </font> {}
+
+    }
+};
+
+//#######################
+//#### main programm ####
+int main(int argc, char** argv)
+{
+  // initialize ROS, spezify name of node
+<font color="#FF0000">   ros::init(argc, argv, "hokuyo_filter"); </font> {}
+
+  NodeClass nc;
+
+<font color="#FF0000">   ros::spin(); </font> {}
+  return 0;
+}
+
+</pre>
+</body>
+</html>

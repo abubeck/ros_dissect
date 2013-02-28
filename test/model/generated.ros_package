@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
+	TUT:   ros::init(argc, argv, "hokuyo_filter");{}
+		<parameter name="start_left_scan" value=0 type="int/>
+		<parameter name="stop_left_scan" value=248 type="int/>
+		<parameter name="start_right_scan" value=442 type="int/>
+		<parameter name="stop_right_scan" value=681 type="int/>
+		<parameter name="start_tray_filter" value=442 type="int/>
+		<parameter name="stop_tray_filter" value=520 type="int/>
+		<parameter name="tray_filter_min_angle" value=-2.941 type="double/>
+		<parameter name="tray_filter_max_angle" value=-1.1431 type="double/>
+		<publisher name="scan_top_filtered" eventHandler="" msg="sensor_msgs/LaserScan"/>
+		<publisher name="scan_top_self_filtered" eventHandler="" msg="sensor_msgs/LaserScan"/>
+sub {}
+sub {}
+	</node>
+</ros:Package>
