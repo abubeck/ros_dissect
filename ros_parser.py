@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import rospkg
 import roslib
 import sys
@@ -85,6 +87,9 @@ class Parser():
 	"""A source code parser for ROS code based on ros_wiki node
 	Will analyze a ROS package and extract all information
 	"""
+
+	parsed_lines = []
+
 	def __init__(self, package_name):
 		self.packdat = PackageData()
 		r = rospkg.RosPack()
@@ -93,21 +98,57 @@ class Parser():
 		self.packdat.description = m.description
 		self.packdat.url = m.url
 		path = r.get_path(package_name)
+		cppfiles = []
 		for r,d,f in os.walk(path):
 			for files in f:
 				if files.endswith(".cpp"):
-					print self.parse_line_by_line(os.path.join(r,files))
+					cppfiles.append(os.path.join(r,files))
+					#print self.parse_line_by_line()
 					print os.path.join(r,files)
+		self.parsed_lines = self.parse_line_by_line(cppfiles)
 		#fill node information
 
+	# Deletes all comments, empty lines and parenthesis lines from source code
+	def strip_comments_and_parenteses(self, lines):
+		#REG EX for comments
+		comment_pattern = r"(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|(//.*)"
+		comment_pattern2 = r"(\s*)(.*?)(//.*)"
+		stripped_lines = []
+		stripped_lines2 = []
+		print "Before stripping: ", str(len(lines))
+		for line in lines:
+			found = 0
+			for match in re.findall(comment_pattern, line.strip()):
+				found = 1
+			if(found == 0 and len(line.strip()) != 0):
+				stripped_lines.append(line)
 
-	def parse_line_by_line(self, filename):
-		f = open(filename, 'r')
-		lines = f.readlines()
-		f.close()
+		print "After first stripping: ", str(len(stripped_lines))
+		#REG EX for parenthesis
+		parenthesis_pattern = r"^(\{|\})"
+		for line in stripped_lines:
+			found = 0
+			for match in re.findall(parenthesis_pattern, line.strip()):
+				found = 1
+			if(found == 0):
+				stripped_lines2.append(line)
+		print "After second stripping: ", str(len(stripped_lines2))
+
+		return stripped_lines2
+
+	# Parses lines for ROS source code
+	def parse_line_by_line(self, filenames):
+		lines = []
+		for filename in filenames:
+			f = open(filename, 'r')
+			lines = lines + f.readlines()
+			f.close()
 		mmap = {}
 		line_number = 0
 		parsed_lines = []
+
+		lines = self.strip_comments_and_parenteses(lines)
+
 		for line in lines:
 			found = 0
 			for (cat, pattern, fields) in PATTERNS:
@@ -122,7 +163,9 @@ class Parser():
 							#print "###########" 
 			parsed_lines.append([line_number, found, line.rstrip(), mmap])
 			line_number+=1
+		print "Hurray! Parsed " + str(len(lines)) + " lines."
 		return parsed_lines
 
 if __name__ == "__main__":
-	p = Parser("cob_hokuyo")
+	if(len(sys.argv) == 2):
+		p = Parser(sys.argv[1])
