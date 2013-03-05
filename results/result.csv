@@ -1,0 +1,7 @@
+package, lloc, roslloc, sep
+cob_base_velocity_smoother, 165, 10, sep
+cob_collision_velocity_filter, 329, 44, sep
+cob_footprint_observer, 171, 17, sep
+cob_3d_fov_segmentation, 234, 7, sep
+cob_read_text, 1175, 7, sep
+cob_marker, 275, 14, sep

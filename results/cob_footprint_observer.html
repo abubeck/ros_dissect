@@ -1,0 +1,181 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+<font color="#FF0000">  nh_ = ros::NodeHandle("~");</font>{}
+  m_mutex = PTHREAD_MUTEX_INITIALIZER;
+<font color="#FF0000">  topic_pub_footprint_ = nh_.advertise<geometry_msgs::PolygonStamped>("adjusted_footprint",1);</font>{'type': 'geometry_msgs::PolygonStamped', 'name': 'adjusted_footprint'}
+<font color="#FF0000">  srv_get_footprint_ = nh_.advertiseService("/get_footprint", &FootprintObserver::getFootprintCB, this);</font>{}
+  std::string footprint_source;
+<font color="#00FF00">  if(!nh_.hasParam("footprint_source")) ROS_WARN("Checking default location (/local_costmap_node/costmap) for initial footprint parameter.");</font>{}
+<font color="#00FF00">  nh_.param("footprint_source", footprint_source, std::string("/local_costmap_node/costmap"));</font>{}
+<font color="#FF0000">  ros::NodeHandle footprint_source_nh_(footprint_source);</font>{}
+  robot_footprint_ = loadRobotFootprint(footprint_source_nh_);
+    ROS_WARN("You have set more than 4 points as robot_footprint, cob_footprint_observer can deal only with rectangular footprints so far!");
+<font color="#00FF00">  if(!nh_.hasParam("frames_to_check")) ROS_WARN("No frames to check for footprint observer. Only using initial footprint!");</font>{}
+<font color="#00FF00">  nh_.param("frames_to_check", frames_to_check_, std::string(""));</font>{}
+<font color="#00FF00">  if(!nh_.hasParam("robot_base_frame")) ROS_WARN("No parameter robot_base_frame on parameter server. Using default [/base_link].");</font>{}
+<font color="#00FF00">  nh_.param("robot_base_frame", robot_base_frame_, std::string("/base_link"));</font>{}
+  last_tf_missing_ = ros::Time::now();
+  geometry_msgs::PolygonStamped footprint_poly;
+  footprint_poly.header.frame_id = robot_base_frame_;
+  footprint_poly.header.stamp = ros::Time::now();
+  footprint_poly.polygon.points.resize(robot_footprint_.size());
+  for(unsigned int i=0;
+  for(unsigned int i=0; i<robot_footprint_.size();
+    footprint_poly.polygon.points[i].x = robot_footprint_[i].x;
+    footprint_poly.polygon.points[i].y = robot_footprint_[i].y;
+    footprint_poly.polygon.points[i].z = robot_footprint_[i].z;
+  resp.footprint = footprint_poly;
+  resp.success.data = true;
+  return true;
+  std::vector<geometry_msgs::Point> footprint;
+  geometry_msgs::Point pt;
+  double padding;
+  std::string padding_param, footprint_param;
+    padding = 0.01;
+<font color="#00FF00">    node.param(padding_param, padding, 0.01);</font>{}
+  XmlRpc::XmlRpcValue footprint_list;
+  std::string footprint_string;
+  std::vector<std::string> footstring_list;
+    node.getParam(footprint_param, footprint_list);
+      footprint_string = std::string(footprint_list);
+        return footprint;
+      boost::erase_all(footprint_string, " ");
+      boost::char_separator<char> sep("[]");
+      boost::tokenizer<boost::char_separator<char> > tokens(footprint_string, sep);
+      footstring_list = std::vector<std::string>(tokens.begin(), tokens.end());
+      ROS_FATAL("The footprint must be specified as list of lists on the parameter server, %s was specified as %s", footprint_param.c_str(), std::string(footprint_list).c_str());
+      throw std::runtime_error("The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
+      for(int i = 0;
+      for(int i = 0; i < footprint_list.size();
+        XmlRpc::XmlRpcValue point = footprint_list[i];
+          ROS_FATAL("The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
+          throw std::runtime_error("The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
+          ROS_FATAL("Values in the footprint specification must be numbers");
+          throw std::runtime_error("Values in the footprint specification must be numbers");
+        pt.x = point[0].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(point[0]) : (double)(point[0]);
+        pt.x += sign(pt.x) * padding;
+          ROS_FATAL("Values in the footprint specification must be numbers");
+          throw std::runtime_error("Values in the footprint specification must be numbers");
+        pt.y = point[1].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(point[1]) : (double)(point[1]);
+        pt.y += sign(pt.y) * padding;
+        footprint.push_back(pt);
+<font color="#00FF00">        node.deleteParam(footprint_param);</font>{}
+        std::ostringstream oss;
+        bool first = true;
+            oss << "[[" << p.x << "," << p.y << "]";
+            first = false;
+            oss << ",[" << p.x << "," << p.y << "]";
+        oss << "]";
+<font color="#00FF00">        node.setParam(footprint_param, oss.str().c_str());</font>{}
+<font color="#00FF00">        node.setParam("footprint", oss.str().c_str());</font>{}
+      std::vector<geometry_msgs::Point> footprint_spec;
+      bool valid_foot = true;
+          boost::erase_all(t, " ");
+          boost::char_separator<char> pt_sep(",");
+          boost::tokenizer<boost::char_separator<char> > pt_tokens(t, pt_sep);
+          std::vector<std::string> point(pt_tokens.begin(), pt_tokens.end());
+            ROS_WARN("Each point must have exactly 2 coordinates");
+            valid_foot = false;
+            break;
+          std::vector<double>tmp_pt;
+            std::istringstream iss(p);
+            double temp;
+              tmp_pt.push_back(temp);
+              ROS_WARN("Each coordinate must convert to a double.");
+              valid_foot = false;
+              break;
+            break;
+          geometry_msgs::Point pt;
+          pt.x = tmp_pt[0];
+          pt.y = tmp_pt[1];
+          footprint_spec.push_back(pt);
+        footprint = footprint_spec;
+<font color="#00FF00">        node.setParam("footprint", footprint_string);</font>{}
+        ROS_FATAL("This footprint is not vaid it must be specified as a list of lists with at least 3 points, you specified %s", footprint_string.c_str());
+        throw std::runtime_error("The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
+  footprint_right_ = 0.0f;
+  footprint_right_ = 0.0f; footprint_left_ = 0.0f;
+  footprint_right_ = 0.0f; footprint_left_ = 0.0f; footprint_front_ = 0.0f;
+  footprint_right_ = 0.0f; footprint_left_ = 0.0f; footprint_front_ = 0.0f; footprint_rear_ = 0.0f;
+  for(unsigned int i=0;
+  for(unsigned int i=0; i<footprint.size();
+    if(footprint[i].x > footprint_front_) footprint_front_ = footprint[i].x;
+    if(footprint[i].x < footprint_rear_) footprint_rear_ = footprint[i].x;
+    if(footprint[i].y > footprint_left_) footprint_left_ = footprint[i].y;
+    if(footprint[i].y < footprint_right_) footprint_right_ = footprint[i].y;
+  ROS_DEBUG("Extracted rectangular footprint for cob_footprint_observer: Front: %f, Rear %f, Left: %f, Right %f", footprint_front_, footprint_rear_, footprint_left_, footprint_right_);
+    ROS_WARN("Footprint has no physical dimension!");
+  footprint_front_initial_ = footprint_front_;
+  footprint_rear_initial_ = footprint_rear_;
+  footprint_left_initial_ = footprint_left_;
+  footprint_right_initial_ = footprint_right_;
+  return footprint;
+  std::string frame;
+  std::stringstream ss;
+  ss << frames_to_check_;
+  double x_rear, x_front, y_left, y_right;
+  x_front = footprint_front_initial_;
+  x_rear = footprint_rear_initial_;
+  y_left = footprint_left_initial_;
+  y_right = footprint_right_initial_;
+  bool missing_frame_exists = false;
+      tf::StampedTransform transform;
+      tf_listener_.lookupTransform(robot_base_frame_, frame, ros::Time(0), transform);
+      tf::Vector3 frame_position = transform.getOrigin();
+      if(frame_position.x() > x_front) x_front = frame_position.x();
+      if(frame_position.x() < x_rear) x_rear = frame_position.x();
+      if(frame_position.y() > y_left) y_left = frame_position.y();
+      if(frame_position.y() < y_right) y_right = frame_position.y();
+      missing_frame_exists = true;
+               frame.c_str(), frame.c_str());
+    last_tf_missing_ = ros::Time::now();
+  pthread_mutex_lock(&m_mutex);
+  footprint_front_ = x_front;
+  footprint_rear_ = x_rear;
+  footprint_left_ = y_left;
+  footprint_right_ = y_right;
+  pthread_mutex_unlock(&m_mutex);
+  geometry_msgs::Point point;
+  std::vector<geometry_msgs::Point> points;
+  point.x = footprint_front_;
+  point.y = footprint_left_;
+  point.z = 0;
+  points.push_back(point);
+  point.y = footprint_right_;
+  points.push_back(point);
+  point.x = footprint_rear_;
+  points.push_back(point);
+  point.y = footprint_left_;
+  points.push_back(point);
+  pthread_mutex_lock(&m_mutex);
+  robot_footprint_ = points;
+  pthread_mutex_unlock(&m_mutex);
+  publishFootprint();
+  geometry_msgs::PolygonStamped footprint_poly;
+  footprint_poly.header.frame_id = robot_base_frame_;
+  footprint_poly.header.stamp = ros::Time::now();
+  footprint_poly.polygon.points.resize(robot_footprint_.size());
+  for(unsigned int i=0;
+  for(unsigned int i=0; i<robot_footprint_.size();
+    footprint_poly.polygon.points[i].x = robot_footprint_[i].x;
+    footprint_poly.polygon.points[i].y = robot_footprint_[i].y;
+    footprint_poly.polygon.points[i].z = robot_footprint_[i].z;
+<font color="#FF0000">  topic_pub_footprint_.publish(footprint_poly);</font>{}
+  if(x >= 0.0f) return 1.0f;
+  else return -1.0f;
+<font color="#FF0000">  ros::init(argc,argv,"footprint_observer");</font>{}
+  FootprintObserver footprintObserver;
+  ros::Rate loop_rate(30);
+    footprintObserver.checkFootprint();
+    ros::spinOnce();
+    loop_rate.sleep();
+  return 0;
+};
+</pre>
+</body>
+</html>

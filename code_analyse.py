@@ -31,7 +31,7 @@ class RosWiki:
 
     # Creates XMI File based on parser output
     def model_print(self, code):
-        f = open('model/generated.ros_package', 'w')
+        f = open('generated.ros_package', 'w')
         #Create HEADER
         f.write( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         f.write( "<ros:Package xmi:version=\"2.0\" xmlns:xmi=\"http://www.omg.org/XMI\" xmlns:ros=\"http://ros/1.0\" name=\"parsing_of_manifest_missing\" author=\"Alexander Bubeck\" description=\"missing\">\n")
@@ -41,7 +41,7 @@ class RosWiki:
                 f.write( "\tTUT: "+ line[2]+ str(line[3])+"\n")
         #Create parameters
         for line in code:
-            if(line[1] == "param"):
+            if(line[1] == "param_val"):
                 f.write( "\t\t<parameter name=\"" + line[3]['name']+ "\" value=" + line[3]['default'] + " type=\"" + line[3]['type']+ "/>\n")
         #Create publishers
         for line in code:
@@ -98,11 +98,22 @@ class RosWiki:
     def analyse_code_similarity(self, code):
         pass
 
-        
+    def code_to_ros_ratio(self, code):
+        ros_counter = 0
+        user_counter = 0
+        for line in code:
+            if(line[1] != 0):
+                ros_counter +=1
+            else:
+                user_counter +=1
+        print "Found", ros_counter, "lines of ROS Code and", user_counter, "lines of common code in total" , len(code), " lines of code" 
+        return [len(code), ros_counter]
+
 if __name__ == '__main__':
     if(len(sys.argv) == 2):
         p = Parser(sys.argv[1])
     w = RosWiki()
     w.pretty_print(p.parsed_lines)
-
+    w.code_to_ros_ratio(p.parsed_lines)
+    w.model_print(p.parsed_lines)
 

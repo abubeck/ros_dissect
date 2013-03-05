@@ -6,6 +6,7 @@ import sys
 import re
 import os
 import string
+from subprocess import check_output
 
 CATEGORIES = ['sub', 'pub', 'srv', 'srv_called', 'param', 'param_set', 
         'req_tf', 'prov_tf', 'goal', 'feedback', 'result', 'act_called']
@@ -32,18 +33,26 @@ PATTERNS = [
  ['sub',        'subscribe' + GENERIC + '\(' + QSTRING,             ["type", "name"]], 
  ['sub',        'subscribe\(' + QSTRING + '\s*',                            ["name"]], 
  ['pub',        'advertise' + GENERIC + '\s*\(' + QSTRING,             ['type', 'name']],
- ['param',      'param()\(' + QSTRING + ', [^,]+, ([^\)]+)\)',      ['type', 'name', 'default']], 
- ['param',      'param' + GENERIC + '\(' + QSTRING + ', [^,]+' + FINAL_PARAM, ['type', 'name', 'default']],
+ ['param_val',      'param()\(' + QSTRING + ', [^,]+, ([^\)]+)\)',      ['type', 'name', 'default']], 
+ ['param_val',      'param' + GENERIC + '\(' + QSTRING + ', [^,]+' + FINAL_PARAM, ['type', 'name', 'default']],
  ['param',      'getParam\(' + QSTRING,                             ['name']], 
  ['param',      'param::get\(' + QSTRING,                           ['name']], 
- ['param_set',  'setParam\(' + QSTRING,                             ['name']], 
- ['param_set',  'param::set\(' + QSTRING,                           ['name']], 
+ ['param',      'hasParam\(' ,                           []], 
+ ['param',      'param\(' ,                           []], 
+ ['param',  'setParam\(' + QSTRING,                             ['name']],
+ ['param',  'setParam\(',                             []], 
+ ['param',  'deleteParam\(',                             []], 
+ ['param',  'searchParam\(',                             []], 
+ ['param',  'param::set\(' + QSTRING,                           ['name']], 
  ['srv',        'advertiseService\(' + QSTRING,                     ['name']], #C++ service *SHOULD SET TYPE
+ ['srv',        'serviceClient',                     []], 
  ['srv_called', 'advertiseService' + GENERIC + '\(' + QSTRING,      ['type', 'name']],
- ['nodehandle',       'ros::NodeHandle \s*',                        []],
+ ['nodehandle',       'ros::NodeHandle',                        []],
  ['subscriber_def',       'ros::Subscriber \s*',                        []],
  ['publisher_def',       'ros::Publisher \s*',                        []],
-
+ ['serviceserver_def',       'ros::ServiceServer \s*',                        []],
+ ['serviceclient_def',       'ros::ServiceClient \s*',                        []],
+ 
 
 # Python
  ['name',       'rospy.init_node\(' + PSTRING,                      ['name']], 
@@ -150,9 +159,10 @@ class Parser():
 	def parse_line_by_line(self, filenames):
 		lines = []
 		for filename in filenames:
-			f = open(filename, 'r')
+			check_output("cat " + filename +"| ./easysloc", shell=True)
+			f = open("stripped.cpp", 'r')
 			flines = f.readlines()
-			flines = self.strip_comments_and_parenteses(flines)
+			#flines = self.strip_comments_and_parenteses(flines)
 			f.close()
 			print "File " + filename + " with " + str(len(flines)) + " stripped lines."
 			lines = lines + flines
@@ -160,6 +170,7 @@ class Parser():
 		line_number = 0
 		parsed_lines = []
 
+		#Now try to find ROS Patterns
 		for line in lines:
 			found = 0
 			for (cat, pattern, fields) in PATTERNS:

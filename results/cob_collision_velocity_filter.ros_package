@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
+	TUT:   ros::init(argc, argv, "cob_collision_velocity_filter");{}
+		<publisher name="command" eventHandler="" msg="geometry_msgs::Twist"/>
+		<publisher name="relevant_obstacles" eventHandler="" msg="nav_msgs::GridCells"/>
+sub {'type': 'geometry_msgs::Twist', 'name': 'teleop_twist'}
+sub {'type': 'nav_msgs::GridCells', 'name': 'obstacles'}
+	</node>
+</ros:Package>

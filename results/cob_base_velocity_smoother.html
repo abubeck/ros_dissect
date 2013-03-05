@@ -1,0 +1,175 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+using namespace std;
+	int buffer_capacity;
+	double store_delay;
+	double thresh;
+	geometry_msgs::Twist zero_values;
+	cob_base_velocity_smoother();
+<font color="#FF0000">	ros::NodeHandle n;</font>{}
+	boost::circular_buffer<geometry_msgs::Twist> cb;
+	boost::circular_buffer<geometry_msgs::Twist> cb_out;
+	boost::circular_buffer<ros::Time> cb_time;
+<font color="#FF0000">	ros::Publisher pub;</font>{}
+	void geometryCallback(const geometry_msgs::Twist& cmd_vel);
+	void reviseCircBuff(ros::Time now, geometry_msgs::Twist cmd_vel);
+	void limitAcceleration(ros::Time now, geometry_msgs::Twist& cmd_vel);
+	bool CircBuffOutOfDate(ros::Time now);
+	bool IsZeroMsg(geometry_msgs::Twist cmd_vel);
+	int signum(double var);
+	double meanValueX();
+	double meanValueY();
+	double meanValueZ();
+	geometry_msgs::Twist setOutput(ros::Time now, geometry_msgs::Twist cmd_vel);
+};
+<font color="#00FF00">		n.getParam("circular_buffer_capacity",buffer_capacity);</font>{}
+		buffer_capacity = 12;
+		ROS_WARN("Used default parameter for circular buffer capacity [12]");
+<font color="#00FF00">		n.getParam("maximal_time_delay",store_delay);</font>{}
+		store_delay = 4;
+		ROS_WARN("Used default parameter for maximal time delay in seconds for saved messages [4]");
+<font color="#00FF00">		n.getParam("thresh_max_acc",thresh);</font>{}
+		thresh = 0.3;
+		ROS_WARN("Used default parameter for maximal allowed acceleration in m per s [0.3]");
+	zero_values.linear.x=0;
+	zero_values.linear.y=0;
+	zero_values.linear.z=0;
+	zero_values.angular.x=0;
+	zero_values.angular.y=0;
+	zero_values.angular.z=0;
+	cb.set_capacity(buffer_capacity);
+	cb_out.set_capacity(buffer_capacity);
+	cb_time.set_capacity(buffer_capacity);
+	ros::Time now=ros::Time::now();
+		cb.push_front(zero_values);
+		cb_time.push_front(now);
+<font color="#FF0000">	pub = n.advertise<geometry_msgs::Twist>("output", 1);</font>{'type': 'geometry_msgs::Twist', 'name': 'output'}
+};
+	bool result=true;
+	long unsigned int count=0;
+		double delay=(now.toSec() - cb_time[count].toSec());
+			result = false;
+		count++;
+	return result;
+};
+	bool result = true;
+		result = false;
+	return result;
+};
+		return -1;
+		return 1;
+};
+	double result = 0;
+	long unsigned int size = cb.size();
+	for(long unsigned int i=0;
+	for(long unsigned int i=0; i<size;
+		result = result + cb[i].linear.x;
+	result = result / size;
+		double help_result = 0;
+		double max = cb[0].linear.x;
+		long unsigned int max_ind = 0;
+		for(long unsigned int i=0;
+		for(long unsigned int i=0; i<size;
+				max = cb[i].linear.x;
+				max_ind = i;
+		for(long unsigned int i=0;
+		for(long unsigned int i=0; i<size;
+				help_result = help_result + cb[i].linear.x;
+		result = help_result / (size - 1);
+	return result;
+};
+	double result = 0;
+	long unsigned int size = cb.size();
+	for(long unsigned int i=0;
+	for(long unsigned int i=0; i<size;
+		result = result + cb[i].linear.y;
+	result = result / size;
+		double help_result = 0;
+		double max = cb[0].linear.y;
+		long unsigned int max_ind = 0;
+		for(long unsigned int i=0;
+		for(long unsigned int i=0; i<size;
+				max = cb[i].linear.y;
+				max_ind = i;
+		for(long unsigned int i=0;
+		for(long unsigned int i=0; i<size;
+				help_result = help_result + cb[i].linear.y;
+		result = help_result / (size - 1);
+	return result;
+};
+	double result = 0;
+	long unsigned int size = cb.size();
+	for(long unsigned int i=0;
+	for(long unsigned int i=0; i<size;
+		result = result + cb[i].angular.z;
+	result = result / size;
+		double help_result = 0;
+		double max = cb[0].angular.z;
+		long unsigned int max_ind = 0;
+		for(long unsigned int i=0;
+		for(long unsigned int i=0; i<size;
+				max = cb[i].angular.z;
+				max_ind = i;
+		for(long unsigned int i=0;
+		for(long unsigned int i=0; i<size;
+				help_result = help_result + cb[i].angular.z;
+		result = help_result / (size - 1);
+	return result;
+};
+		cb.clear();
+		cb_time.clear();
+			cb.push_front(zero_values);
+			cb_time.push_front(now);
+		cb.push_front(cmd_vel);
+		cb_time.push_front(now);
+		double delay=(now.toSec() - cb_time.back().toSec());
+			cb.pop_back();
+			cb_time.pop_back();
+			delay=(now.toSec() - cb_time.back().toSec());
+				cb.push_front(zero_values);
+				cb_time.push_front(now);
+			long unsigned int size = floor( cb.size() / 3 );
+			for(long unsigned int i=0;
+			for(long unsigned int i=0; i< size;
+				cb.push_front(cmd_vel);
+				cb_time.push_front(now);
+			cb.push_front(cmd_vel);
+			cb_time.push_front(now);
+};
+	double deltaTime = 0;
+		deltaTime = now.toSec() - cb_time[2].toSec();
+			double deltaX = result.linear.x - cb_out.front().linear.x;
+			double accX = deltaX / deltaTime;
+			double deltaY = result.linear.y - cb_out.front().linear.y;
+			double accY = deltaY / deltaTime;
+			double deltaZ = result.angular.z - cb_out.front().angular.z;
+			double accZ = deltaZ / deltaTime;
+				result.linear.x = cb_out.front().linear.x + ( this->signum(accX) * thresh * deltaTime );
+				result.linear.y = cb_out.front().linear.y + ( this->signum(accY) * thresh * deltaTime );
+				result.angular.z = cb_out.front().angular.z + ( this->signum(accZ) * thresh * deltaTime );
+};
+	geometry_msgs::Twist result = zero_values;
+	this->reviseCircBuff(now, cmd_vel);
+	result.linear.x = meanValueX();
+	result.linear.y = meanValueY();
+	result.angular.z = meanValueZ();
+	this->limitAcceleration(now, result);
+	cb_out.push_front(result);
+	return result;
+	ros::Time now = ros::Time::now();
+	geometry_msgs::Twist result = this->setOutput(now, cmd_vel);
+<font color="#FF0000">	pub.publish(result);</font>{}
+};
+<font color="#FF0000">	ros::init(argc, argv, "cob_base_velocity_smoother");</font>{}
+	cob_base_velocity_smoother my_cvi = cob_base_velocity_smoother();
+<font color="#FF0000">	ros::Subscriber sub = my_cvi.n.subscribe("input", 1, &cob_base_velocity_smoother::geometryCallback, &my_cvi);</font>{}
+<font color="#FF0000">	ros::spin();</font>{}
+	return 0;
+</pre>
+</body>
+</html>
