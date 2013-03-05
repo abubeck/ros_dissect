@@ -1,0 +1,214 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+1:    boost::scoped_ptr<IKWrapper> wrapper;
+2:<font color="#FF0000">    ros::NodeHandle nh;</font>{}
+3:<font color="#FF0000">    ros::ServiceClient get_ik_client;</font>{}
+4:<font color="#FF0000">    ros::ServiceClient get_fk_client;</font>{}
+5:<font color="#FF0000">    ros::ServiceClient get_constraint_aware_ik_client;</font>{}
+6:<font color="#FF0000">    ros::ServiceServer get_ik_server;</font>{}
+7:<font color="#FF0000">    ros::ServiceServer get_fk_server;</font>{}
+8:<font color="#FF0000">    ros::ServiceServer get_constraint_aware_ik_server;</font>{}
+9:<font color="#FF0000">    ros::ServiceServer get_ik_extended_server;</font>{}
+10:        response.error_code.val  = wrapper->transformPositionIKRequest(request.ik_request);
+11:        if(response.error_code.val == 0) return get_ik_client.call(request, response);
+12:        return true;
+13:        response.error_code.val  = wrapper->transformPositionIKRequest(request.ik_request);
+14:        if(response.error_code.val == 0) return get_constraint_aware_ik_client.call(request, response);
+15:        return true;
+16:        bool ret= true;
+17:        const geometry_msgs::Pose *pose=0;
+18:            pose = &request.ik_pose;
+19:        response.error_code.val  = wrapper->transformPositionIKRequest(request.ik_request, pose);
+20:            kinematics_msgs::GetConstraintAwarePositionIK::Request request_intern;
+21:            kinematics_msgs::GetConstraintAwarePositionIK::Response response_intern;
+22:            request_intern.ik_request = request.ik_request;
+23:            request_intern.timeout = request.timeout;
+24:            request_intern.constraints = request.constraints;
+25:            ret = get_constraint_aware_ik_client.call(request_intern, response_intern);
+26:            response.solution = response_intern.solution;
+27:            response.error_code = response_intern.error_code;
+28:            kinematics_msgs::GetPositionIK::Request request_intern;
+29:            kinematics_msgs::GetPositionIK::Response response_intern;
+30:            request_intern.ik_request = request.ik_request;
+31:            request_intern.timeout = request.timeout;
+32:            ret = get_ik_client.call(request_intern, response_intern);
+33:            response.solution = response_intern.solution;
+34:            response.error_code = response_intern.error_code;
+35:        return ret;
+36:        return wrapper->getPositionFK(request, response, get_fk_client);
+37:    std::string prefix, ik_name, fk_name, constraint_ik_name, info_name,link_names, prefetch_tips;
+38:<font color="#00FF00">    nh.param<std::string>("srvs_prefix", prefix, "/cob_arm_kinematics/");</font>{'default': '"/cob_arm_kinematics/"', 'type': 'std::string', 'name': 'srvs_prefix'}
+39:<font color="#00FF00">    nh.param<std::string>("ik_srv", ik_name, prefix+"get_ik");</font>{'default': 'prefix+"get_ik"', 'type': 'std::string', 'name': 'ik_srv'}
+40:<font color="#00FF00">    nh.param<std::string>("fk_srv", fk_name, prefix+"get_fk");</font>{'default': 'prefix+"get_fk"', 'type': 'std::string', 'name': 'fk_srv'}
+41:<font color="#00FF00">    nh.param<std::string>("constraint_aware_srv", constraint_ik_name, prefix +"get_constraint_aware_ik");</font>{'default': 'prefix +"get_constraint_aware_ik"', 'type': 'std::string', 'name': 'constraint_aware_srv'}
+42:<font color="#00FF00">    nh.param<std::string>("info_srv", info_name, prefix +"get_ik_solver_info");</font>{'default': 'prefix +"get_ik_solver_info"', 'type': 'std::string', 'name': 'info_srv'}
+43:<font color="#00FF00">    nh.param<std::string>("link_names", link_names, "");</font>{'default': '""', 'type': 'std::string', 'name': 'link_names'}
+44:<font color="#00FF00">    nh.param<std::string>("prefetch_tips", prefetch_tips, "");</font>{'default': '""', 'type': 'std::string', 'name': 'prefetch_tips'}
+45:    std::vector<std::string> root_names;
+46:        boost::split(root_names,link_names, boost::is_any_of(" ,"), boost::token_compress_on);
+47:    std::vector<std::string> tip_names;
+48:        boost::split(tip_names,prefetch_tips, boost::is_any_of(" ,"), boost::token_compress_on);
+49:    std::cout << ik_name << std::endl;
+50:    get_ik_client = ros::service::createClient<kinematics_msgs::GetPositionIK>(ik_name);
+51:    get_constraint_aware_ik_client = ros::service::createClient<kinematics_msgs::GetConstraintAwarePositionIK>(constraint_ik_name);
+52:    get_fk_client = ros::service::createClient<kinematics_msgs::GetPositionFK>(fk_name);
+53:    bool okay;
+54:    for(int i=0;
+55:    for(int i=0; i<20;
+56:        okay = true;
+57:        if (get_ik_client.exists()) break;
+58:        if (get_constraint_aware_ik_client.exists()) break;
+59:        if (get_fk_client.exists()) break;
+60:        ros::Duration(1.0).sleep();
+61:        okay = false;
+62:    kinematics_msgs::GetKinematicSolverInfo::Request info_request;
+63:    kinematics_msgs::GetKinematicSolverInfo::Response info_response;
+64:        ROS_WARN("Info service not available!");
+65:    root_names.insert(root_names.end(), info_response.kinematic_solver_info.link_names.begin(), info_response.kinematic_solver_info.link_names.end());
+66:<font color="#FF0000">        ros::NodeHandle rh;</font>{}
+67:        urdf::Model model;
+68:        model.initParam("robot_description");
+69:        wrapper.reset(new IKWrapper(model, root_names, tip_names));
+70:<font color="#FF0000">         get_ik_server = rh.advertiseService("get_ik", &IKWrapperNode::getPositionIK,this);</font>{}
+71:<font color="#FF0000">         get_constraint_aware_ik_server = rh.advertiseService("get_constraint_aware_ik", &IKWrapperNode::getConstraintAwarePositionIK,this);</font>{}
+72:<font color="#FF0000">        get_fk_server = rh.advertiseService("get_fk", &IKWrapperNode::getPositionFK,this);</font>{}
+73:<font color="#FF0000">         get_ik_extended_server = rh.advertiseService("get_ik_extended", &IKWrapperNode::getPositionIKExtended,this);</font>{}
+74:         nh.shutdown();
+75:};
+76:<font color="#FF0000">    ros::init(argc,argv,"ik_wrapper_node");</font>{}
+77:    IKWrapperNode node;
+78:<font color="#FF0000">    ros::spin();</font>{}
+79:    return 0;
+80:    KDL::Chain chain;
+81:    tree.getChain(root_name, tip_name, chain);
+82:    solver =  new KDL::ChainFkSolverPos_recursive(chain);
+83:    unsigned int  num = chain.getNrOfSegments();
+84:    for(unsigned int i = 0;
+85:    for(unsigned int i = 0; i < num;
+86:	const KDL::Joint &joint = chain.getSegment(i).getJoint();
+87:	if (joint.getType() != KDL::Joint::None) joints.insert(std::make_pair(joint.getName(),joints.size()));
+88:    ROS_ASSERT(joints.size() == chain.getNrOfJoints());
+89:        array_out.resize(joints.size());
+90:        missing = joints;
+91:    int joints_needed = missing.size();
+92:    unsigned int num = state_in.name.size();
+93:	for(unsigned i = 0;
+94:	for(unsigned i = 0; i <  num && joints_needed > 0;
+95:	    std::map<std::string, unsigned int>::iterator it = missing.find(state_in.name[i]);
+96:		array_out(it->second) = state_in.position[i];
+97:		--joints_needed;
+98:    return joints_needed == 0;
+99:    for(std::map<std::string, unsigned int>::const_iterator it = joints.begin();
+100:    for(std::map<std::string, unsigned int>::const_iterator it = joints.begin(); it != joints.end();
+101:	v.push_back(it->first);
+102:    for(std::vector<boost::shared_ptr<urdf::Link > >::const_iterator it = links.begin();
+103:    for(std::vector<boost::shared_ptr<urdf::Link > >::const_iterator it = links.begin(); it!= links.end();
+104:	target.insert(std::make_pair((*it)->name,root));
+105:	crawl_and_add_links((*it)->child_links,root,target);
+106:    boost::shared_ptr<KDL::Tree> tree;
+107:    tree_map::iterator it = roots.find(root);
+108:	ROS_WARN_STREAM("Link " << root << " already processed");
+109:	return false;
+110:	ROS_ERROR_STREAM("Model does not include link '" << root << "'");
+111:	return false;
+112:    tree.reset(new KDL::Tree());
+113:    kdl_parser::treeFromUrdfModel(model, *tree);
+114:    roots.insert(std::make_pair(root,tree));
+115:    crawl_and_add_links(model.getLink(root)->child_links,root,tips);
+116:    return !tips.empty();
+117:	chain_map::iterator it = chains.find(tip);
+118:	    return it->second.get();
+119:	    std::map<std::string, std::string>::iterator it_root = tips.find(tip);
+120:		boost::shared_ptr<ChainFK> chain(new ChainFK(*roots[it_root->second],it_root->second,tip));
+121:		chains.insert(std::make_pair(tip, chain));
+122:		return chain.get();
+123:    return 0;
+124:    for(unsigned int i = 0;
+125:    for(unsigned int i = 0; i < root_names.size();
+126:	std::cout << " " << root_names[i] << std::endl;
+127:	fk_lookup.addRoot(model, root_names[i]);
+128:    for(unsigned int i = 0;
+129:    for(unsigned int i = 0; i < tip_names.size();
+130:	fk_lookup.getChain(tip_names[i]);
+131:    const FkLookup::ChainFK * fk = fk_lookup.getChain(request.ik_link_name);
+132:	KDL::Frame frame_in, frame_fk, frame_out;
+133:	tf::PoseMsgToKDL(request.pose_stamped.pose, frame_in);
+134:	KDL::JntArray joints;
+135:        std::map<std::string, unsigned int> missing;
+136:            return arm_navigation_msgs::ArmNavigationErrorCodes::INCOMPLETE_ROBOT_STATE;
+137:	if(!fk->getFK(joints,frame_fk)) return arm_navigation_msgs::ArmNavigationErrorCodes::NO_FK_SOLUTION;
+138:	frame_out = frame_in * frame_fk.Inverse();
+139:	tf::PoseKDLToMsg(frame_out, request.pose_stamped.pose);
+140:	request.ik_link_name = fk->getRoot();
+141:	KDL::Frame frame_extended, frame_ik, frame_out;
+142:	tf::PoseMsgToKDL(*pose, frame_extended);
+143:	tf::PoseMsgToKDL(request.pose_stamped.pose, frame_ik);
+144:	frame_out = frame_extended.Inverse() * frame_ik;
+145:	tf::PoseKDLToMsg(frame_out, request.pose_stamped.pose);
+146:    return 0;
+147:    std::set<std::string> unqiue_roots;
+148:    for(std::vector<std::string>::const_iterator it = links.begin();
+149:    for(std::vector<std::string>::const_iterator it = links.begin(); it != links.end();
+150:	const FkLookup::ChainFK* c = fk_lookup.getChain(*it);
+151:	    unqiue_roots.insert(c->getRoot());
+152:	    unqiue_roots.insert(*it);
+153:    roots_links.assign(unqiue_roots.begin(), unqiue_roots.end());
+154:    std::set<std::string> unqiue_joints;
+155:    bool res = true;
+156:    for(std::vector<std::string>::const_iterator it = links.begin();
+157:    for(std::vector<std::string>::const_iterator it = links.begin(); it != links.end();
+158:	const FkLookup::ChainFK* c = fk_lookup.getChain(*it);
+159:	    std::vector<std::string> j;
+160:	    c->getJoints(j);
+161:	    unqiue_joints.insert(j.begin(),j.end());
+162:	    res = false;
+163:    joints.assign(unqiue_joints.begin(), unqiue_joints.end());
+164:    return res;
+165:    std::vector<std::string> &requested_links = response.fk_link_names;
+166:    requested_links = request.fk_link_names;
+167:    std::map<std::string, const FkLookup::ChainFK*> chains;
+168:    std::map<std::string, unsigned int> roots_links;
+169:    for(unsigned int i=0;
+170:    for(unsigned int i=0; i < requested_links.size();
+171:	const FkLookup::ChainFK* c = fk_lookup.getChain(requested_links[i]);
+172:	chains.insert(std::make_pair(requested_links[i],c));
+173:	    roots_links.insert(std::make_pair(c->getRoot(),0));
+174:	    roots_links.insert(std::make_pair(requested_links[i],0));
+175:    request.fk_link_names.clear();
+176:    for(std::map<std::string, unsigned int>::iterator it = roots_links.begin();
+177:    for(std::map<std::string, unsigned int>::iterator it = roots_links.begin(); it != roots_links.end();
+178:	it->second= request.fk_link_names.size();
+179:	request.fk_link_names.push_back(it->first);
+180:    kinematics_msgs::GetPositionFK::Response response_intern;
+181:    get_fk_client.call(request, response_intern);
+182:    response.error_code = response_intern.error_code;
+183:    response.pose_stamped.clear();
+184:	for(std::vector<std::string>::iterator it = requested_links.begin();
+185:	for(std::vector<std::string>::iterator it = requested_links.begin(); it != requested_links.end();
+186:	    const FkLookup::ChainFK * fk = chains[*it];
+187:		response.pose_stamped.push_back(response_intern.pose_stamped[roots_links[*it]]);
+188:		continue;
+189:	    KDL::Frame frame_fk;
+190:	    KDL::JntArray joints;
+191:            std::map<std::string, unsigned int> missing;
+192:		response.error_code.val = arm_navigation_msgs::ArmNavigationErrorCodes::INCOMPLETE_ROBOT_STATE;
+193:		break;
+194:		response.error_code.val = arm_navigation_msgs::ArmNavigationErrorCodes::NO_FK_SOLUTION;
+195:		break;
+196:		geometry_msgs::PoseStamped ps = response_intern.pose_stamped[roots_links[fk->getRoot()]];
+197:		KDL::Frame frame_in;
+198:		tf::PoseMsgToKDL(ps.pose, frame_in);
+199:		KDL::Frame frame_out = frame_in * frame_fk;
+200:		tf::PoseKDLToMsg(frame_out, ps.pose);
+201:		response.pose_stamped.push_back(ps);
+202:	response.pose_stamped.clear();
+203:	response.fk_link_names.clear();
+204:    return true;
+</pre>
+</body>
+</html>

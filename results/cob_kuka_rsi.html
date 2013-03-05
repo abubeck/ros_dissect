@@ -1,0 +1,246 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+1:<font color="#FF0000">	ros::NodeHandle n_;</font>{}
+2:<font color="#FF0000">	ros::Publisher topicPub_JointState_;</font>{}
+3:<font color="#FF0000">	ros::Publisher topicPub_ControllerState_;</font>{}
+4:<font color="#FF0000">	ros::Publisher topicPub_OperationMode_;</font>{}
+5:<font color="#FF0000">	ros::Publisher topicPub_Diagnostic_;</font>{}
+6:<font color="#FF0000">	ros::Subscriber topicSub_CommandVel_;</font>{}
+7:<font color="#FF0000">	ros::ServiceServer srvServer_Init_;</font>{}
+8:<font color="#FF0000">	ros::ServiceServer srvServer_SetOperationMode_;</font>{}
+9:<font color="#FF0000">	ros::ServiceServer srvServer_Recover_;</font>{}
+10:	RSIConnector* rsi_ctrl_;
+11:	bool initialized_;
+12:	bool error_;
+13:	std::vector<std::string> joint_names_;
+14:	std::string ip_;
+15:	int port_;
+16:<font color="#FF0000">		n_ = ros::NodeHandle("~");</font>{}
+17:<font color="#00FF00">			n_.getParam("ip", ip_);</font>{}
+18:			ROS_INFO("RSI: ip is set to %s",ip_.c_str());
+19:			ROS_ERROR("Parameter ip not set, shutting down node...");
+20:			n_.shutdown();
+21:<font color="#00FF00">			n_.getParam("port", port_);</font>{}
+22:			ROS_INFO("RSI: port is set to %d",port_);
+23:			ROS_ERROR("Parameter port not set, shutting down node...");
+24:			n_.shutdown();
+25:		rsi_ctrl_ = new RSIConnector(ip_, port_, true);
+26:				"/joint_states", 1);
+27:				1);
+28:				"current_operationmode", 1);
+29:				"/diagnostics", 1);
+30:				&RSINode::topicCallback_CommandVel, this);
+31:				&RSINode::srvCallback_Init, this);
+32:				&RSINode::srvCallback_Recover, this);
+33:				&RSINode::srvCallback_SetOperationMode, this);
+34:		initialized_ = false;
+35:		XmlRpc::XmlRpcValue JointNamesXmlRpc;
+36:<font color="#00FF00">			n_.getParam("joint_names", JointNamesXmlRpc);</font>{}
+37:			ROS_ERROR("Parameter joint_names not set, shutting down node...");
+38:			n_.shutdown();
+39:		joint_names_.resize(JointNamesXmlRpc.size());
+40:		for (int i = 0;
+41:		for (int i = 0; i < JointNamesXmlRpc.size();
+42:			joint_names_[i] = (std::string) JointNamesXmlRpc[i];
+43:		rsi_ctrl_->stop();
+44:		ROS_INFO("RSI closed!");
+45:		ROS_DEBUG("Received new velocity command");
+46:			ROS_WARN("Skipping command: RSI not initialized");
+47:			return;
+48:		RSIConnector::AxisCorrection cor;
+49:		cor.dA1 = RAD_TO_DEG(msg->velocities[0].value) / IPOC_HZ;
+50:			cor.dA1 = MAX_VEL;
+51:			cor.dA1 = -MAX_VEL;
+52:		cor.dA2 = RAD_TO_DEG(msg->velocities[1].value) / IPOC_HZ;
+53:			cor.dA2 = MAX_VEL;
+54:			cor.dA2 = -MAX_VEL;
+55:		cor.dA3 = RAD_TO_DEG(msg->velocities[2].value) / IPOC_HZ;
+56:			cor.dA3 = MAX_VEL;
+57:			cor.dA3 = -MAX_VEL;
+58:		cor.dA4 = RAD_TO_DEG(msg->velocities[3].value) / IPOC_HZ;
+59:			cor.dA4 = MAX_VEL;
+60:			cor.dA4 = -MAX_VEL;
+61:		cor.dA5 = RAD_TO_DEG(msg->velocities[4].value) / IPOC_HZ;
+62:			cor.dA5 = MAX_VEL;
+63:			cor.dA5 = -MAX_VEL;
+64:		cor.dA6 = RAD_TO_DEG(msg->velocities[5].value) / IPOC_HZ;
+65:			cor.dA6 = MAX_VEL;
+66:			cor.dA6 = -MAX_VEL;
+67:		rsi_ctrl_->SetAxisCorrection(cor);
+68:			ROS_INFO("Initializing RSI...");
+69:			rsi_ctrl_->start();
+70:			initialized_ = true;
+71:			res.success.data = true;
+72:			res.error_message.data = "RSI initialized successfully";
+73:			res.success.data = true;
+74:			res.error_message.data = "RSI already initialized";
+75:			ROS_WARN("...initializing RSI not successful. error: %s",res.error_message.data.c_str());
+76:		return true;
+77:		ROS_INFO("Recovering RSI...");
+78:			res.success.data = false;
+79:			res.error_message.data = "text";
+80:			ROS_ERROR("...recovering RSI successful. error: %s", res.error_message.data.c_str());
+81:			res.success.data = false;
+82:			res.error_message.data = "RSI not initialized";
+83:			ROS_ERROR("...recovering RSInot successful. error: %s",res.error_message.data.c_str());
+84:		return true;
+85:			ROS_WARN("RSI currently only supports velocity commands");
+86:			res.success.data = false;
+87:			res.success.data = true;
+88:		return true;
+89:			ROS_DEBUG("publish state");
+90:			RSIConnector::RobotPosition pos = rsi_ctrl_->GetRobPos();
+91:			std::vector<double> pos_vec;
+92:			pos_vec.push_back(DEG_TO_RAD(pos.A1));
+93:			pos_vec.push_back(DEG_TO_RAD(pos.A2));
+94:			pos_vec.push_back(DEG_TO_RAD(pos.A3));
+95:			pos_vec.push_back(DEG_TO_RAD(pos.A4));
+96:			pos_vec.push_back(DEG_TO_RAD(pos.A5));
+97:			pos_vec.push_back(DEG_TO_RAD(pos.A6));
+98:			sensor_msgs::JointState joint_state_msg;
+99:			joint_state_msg.header.stamp = ros::Time::now();
+100:			joint_state_msg.name = joint_names_;
+101:			joint_state_msg.position = pos_vec;
+102:					controller_state_msg;
+103:			controller_state_msg.header.stamp = joint_state_msg.header.stamp;
+104:			controller_state_msg.joint_names = joint_state_msg.name;
+105:			controller_state_msg.actual.positions = joint_state_msg.position;
+106:			controller_state_msg.actual.velocities = joint_state_msg.velocity;
+107:			std_msgs::String opmode_msg;
+108:			opmode_msg.data = "velocity";
+109:<font color="#FF0000">			topicPub_JointState_.publish(joint_state_msg);</font>{}
+110:<font color="#FF0000">			topicPub_ControllerState_.publish(controller_state_msg);</font>{}
+111:<font color="#FF0000">			topicPub_OperationMode_.publish(opmode_msg);</font>{}
+112:		diagnostic_msgs::DiagnosticArray diagnostics;
+113:		diagnostics.status.resize(1);
+114:			diagnostics.status[0].level = 2;
+115:			diagnostics.status[0].name = n_.getNamespace();
+116:			diagnostics.status[0].message = "an error occured";
+117:				diagnostics.status[0].level = 0;
+118:				diagnostics.status[0].name = n_.getNamespace();
+119:				diagnostics.status[0].message = "RSI initialized and running";
+120:				diagnostics.status[0].level = 1;
+121:				diagnostics.status[0].name = n_.getNamespace();
+122:				diagnostics.status[0].message = "RSI not initialized";
+123:<font color="#FF0000">		topicPub_Diagnostic_.publish(diagnostics);</font>{}
+124:};
+125:<font color="#FF0000">	ros::init(argc, argv, "kuka_rsi");</font>{}
+126:	RSINode rsi_node;
+127:	double frequency;
+128:<font color="#00FF00">		rsi_node.n_.getParam("frequency", frequency);</font>{}
+129:		frequency = 10;
+130:		ROS_WARN("Parameter frequency not available, setting to default value: %f Hz", frequency);
+131:	ros::Rate loop_rate(frequency);
+132:		rsi_node.publishState();
+133:		ros::spinOnce();
+134:		loop_rate.sleep();
+135:	return 0;
+136:	std::cout << "About to start... please press ENTER" << std::endl;
+137:	getchar();
+138:	RSIConnector connector("192.1.10.1", 49150, true);
+139:	connector.start();
+140:	std::cout << "About to turn ax6... please press ENTER" << std::endl;
+141:	getchar();
+142:	RSIConnector::AxisCorrection axisCor = {0};
+143:	axisCor.dA6 = 0.01f;
+144:	connector.SetAxisCorrection(axisCor);
+145:	std::cout << "About to stop... please press ENTER" << std::endl;
+146:	getchar();
+147:	axisCor.dA6 = 0;
+148:	connector.SetAxisCorrection(axisCor);
+149:	std::cout << "About to terminate... please press ENTER" << std::endl;
+150:	getchar();
+151:	connector.stop();
+152:	return 0;
+153:	memset(&_robPosG, 0, sizeof(_robPosG));
+154:	memset(&_RKorr, 0, sizeof(_RKorr));
+155:	memset(&_AKorr, 0, sizeof(_AKorr));
+156:	_correctAxis = isCorrectingAxes;
+157:	boost::system::error_code error;
+158:	_socket = new udp::socket(_io_service);
+159:	_socket->open(udp::v4());
+160:			udp_port), error);
+161:				<< std::endl;
+162:	_run = false;
+163:	clock_t beginn = getMilliSecs();
+164:		_mutexStringParser.lock();
+165:		RobotPosition robPos;
+166:		std::cout << "Hello" << _dataFromRobot.c_str() << std::endl;
+167:				&robPos.A6, &robPos.timestamp);
+168:		_mutexStringParser.unlock();
+169:		SetRobPos(robPos);
+170:		std::cout << "IPOC: " << robPos.timestamp << "\tA1: " << robPos.A1 << " A2: " << robPos.A2 << " A3: " << robPos.A3 << " A4: " << robPos.A4 << " A5: " << robPos.A5 << " A6: " << robPos.A6 << std::endl;
+171:		std::cerr << "Error while reading xml: " << e.what() << std::endl;
+172:		getchar();
+173:	std::cout << "It took " << (getMilliSecs()-beginn) << " ms to parse" << std::endl << std::endl;
+174:	int startdummy = receive.rfind("<IPOC>") + 6;
+175:	int stopdummy = receive.rfind("</IPOC>");
+176:	std::string Ipocount = receive.substr(startdummy, stopdummy - startdummy);
+177:	return Ipocount;
+178:	RobotPosition robPos = { 0 };
+179:	_ipoCount = 0;
+180:			boost::array<char, 1024> recv_buf;
+181:			udp::endpoint remote_endpoint;
+182:			boost::system::error_code error;
+183:			AxisCorrection axCor;
+184:			RobotCorrection robCor = { 0 };
+185:				axCor = GetAxisCorrection();
+186:				robCor = GetRobCorrection();
+187:			std::cout << "H" << std::endl;
+188:			std::ostringstream conv;
+189:					remote_endpoint, 0, error);
+190:			conv << recv_buf.data();
+191:			std::cout << conv.str() << std::endl;
+192:			_mutexStringParser.lock();
+193:			_dataFromRobot = conv.str();
+194:			_mutexStringParser.unlock();
+195:			std::string timestamp = extractIPOC(conv.str());
+196:			std::stringstream messageStream;
+197:						<< "\" />\n<IPOC>" + timestamp + "</IPOC>\n</Sen>\n";
+198:						<< "\" />\n<IPOC>" + timestamp + "</IPOC>\n</Sen>\n";
+199:			std::string message = messageStream.str();
+200:			boost::system::error_code ignored_error;
+201:					ignored_error);
+202:						this));
+203:			_ipoCount++;
+204:			conv.clear();
+205:			messageStream.clear();
+206:					<< std::endl;
+207:	_run = true;
+208:	_worker = new boost::thread(boost::bind(&RSIConnector::work, this));
+209:	_run = false;
+210:	_socket->close();
+211:	_worker->join();
+212:	RobotPosition robPos;
+213:	_mutexRobPos.lock();
+214:	robPos = _robPosG;
+215:	_mutexRobPos.unlock();
+216:	return robPos;
+217:	_mutexRobCor.lock();
+218:	_RKorr = robCor;
+219:	_mutexRobCor.unlock();
+220:	_mutexRobPos.lock();
+221:	_robPosG = robPos;
+222:	_mutexRobPos.unlock();
+223:	return _ipoCount;
+224:	RobotCorrection robCor = { 0 };
+225:	_mutexRobCor.lock();
+226:	robCor = _RKorr;
+227:	_mutexRobCor.unlock();
+228:	return robCor;
+229:	AxisCorrection axCor;
+230:	_mutexRobCor.lock();
+231:	axCor = _AKorr;
+232:	_mutexRobCor.unlock();
+233:	return axCor;
+234:	_mutexRobCor.lock();
+235:	_AKorr = axCor;
+236:	_mutexRobCor.unlock();
+</pre>
+</body>
+</html>

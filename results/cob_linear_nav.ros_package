@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
+	TUT: 	ros::init(argc, argv, "cob_linear");{}
+		<publisher name="cmd_vel" eventHandler="" msg="geometry_msgs::Twist"/>
+sub {'type': 'geometry_msgs::PoseStamped', 'name': 'goal'}
+sub {'type': 'nav_msgs::Odometry', 'name': 'odom'}
+	</node>
+</ros:Package>

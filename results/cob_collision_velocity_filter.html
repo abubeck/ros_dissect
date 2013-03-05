@@ -5,335 +5,335 @@
         <tr>
 
         <td><pre style="border: 1px solid #888;padding: 2px">
-<font color="#FF0000">  nh_ = ros::NodeHandle("~");</font>{}
-  m_mutex = PTHREAD_MUTEX_INITIALIZER;
-  std::string costmap_parameter_source;
-<font color="#00FF00">  if(!nh_.hasParam("costmap_parameter_source")) ROS_WARN("Checking default source [/local_costmap_node/costmap] for costmap parameters");</font>{}
-<font color="#00FF00">  nh_.param("costmap_parameter_source",costmap_parameter_source, std::string("/local_costmap_node/costmap"));</font>{}
-<font color="#FF0000">  ros::NodeHandle local_costmap_nh_(costmap_parameter_source);</font>{}
-<font color="#FF0000">  topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("command", 1);</font>{'type': 'geometry_msgs::Twist', 'name': 'command'}
-<font color="#FF0000">  topic_pub_relevant_obstacles_ = nh_.advertise<nav_msgs::GridCells>("relevant_obstacles", 1);</font>{'type': 'nav_msgs::GridCells', 'name': 'relevant_obstacles'}
-<font color="#FF0000">  joystick_velocity_sub_ = nh_.subscribe<geometry_msgs::Twist>("teleop_twist", 1, boost::bind(&CollisionVelocityFilter::joystickVelocityCB, this, _1));</font>{'type': 'geometry_msgs::Twist', 'name': 'teleop_twist'}
-<font color="#FF0000">  obstacles_sub_ = nh_.subscribe<nav_msgs::GridCells>("obstacles", 1, boost::bind(&CollisionVelocityFilter::obstaclesCB, this, _1));</font>{'type': 'nav_msgs::GridCells', 'name': 'obstacles'}
-<font color="#FF0000">  srv_client_get_footprint_ = nh_.serviceClient<cob_footprint_observer::GetFootprint>("/get_footprint");</font>{}
-  double footprint_update_frequency;
-<font color="#00FF00">  if(!nh_.hasParam("footprint_update_frequency")) ROS_WARN("Used default parameter for footprint_update_frequency [1.0 Hz].");</font>{}
-<font color="#00FF00">  nh_.param("footprint_update_frequency",footprint_update_frequency,1.0);</font>{}
-  get_footprint_timer_ = nh_.createTimer(ros::Duration(1/footprint_update_frequency), boost::bind(&CollisionVelocityFilter::getFootprintServiceCB, this, _1));
-<font color="#00FF00">  if(!local_costmap_nh_.hasParam(costmap_parameter_source+"/global_frame")) ROS_WARN("Used default parameter for global_frame [/base_link]");</font>{}
-<font color="#00FF00">  local_costmap_nh_.param(costmap_parameter_source+"/global_frame", global_frame_, std::string("/base_link"));</font>{}
-<font color="#00FF00">  if(!local_costmap_nh_.hasParam(costmap_parameter_source+"/robot_base_frame")) ROS_WARN("Used default parameter for robot_frame [/base_link]");</font>{}
-<font color="#00FF00">  local_costmap_nh_.param(costmap_parameter_source+"/robot_base_frame", robot_frame_, std::string("/base_link"));</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("influence_radius")) ROS_WARN("Used default parameter for influence_radius [1.5 m]");</font>{}
-<font color="#00FF00">  nh_.param("influence_radius", influence_radius_, 1.5);</font>{}
-  closest_obstacle_dist_ = influence_radius_;
-  closest_obstacle_angle_ = 0.0;
-<font color="#00FF00">  if(!nh_.hasParam("stop_threshold")) ROS_WARN("Used default parameter for stop_threshold [0.1 m]");</font>{}
-<font color="#00FF00">  nh_.param("stop_threshold", stop_threshold_, 0.10);</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("obstacle_damping_dist")) ROS_WARN("Used default parameter for obstacle_damping_dist [5.0 m]");</font>{}
-<font color="#00FF00">  nh_.param("obstacle_damping_dist", obstacle_damping_dist_, 5.0);</font>{}
-    obstacle_damping_dist_ = stop_threshold_ + 0.01;
-    ROS_WARN("obstacle_damping_dist <= stop_threshold -> robot will stop without decceleration!");
-<font color="#00FF00">  if(!nh_.hasParam("use_circumscribed_threshold")) ROS_WARN("Used default parameter for use_circumscribed_threshold_ [0.2 rad/s]");</font>{}
-<font color="#00FF00">  nh_.param("use_circumscribed_threshold", use_circumscribed_threshold_, 0.20);</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_vmax")) ROS_WARN("Used default parameter for pot_ctrl_vmax [0.6]");</font>{}
-<font color="#00FF00">  nh_.param("pot_ctrl_vmax", v_max_, 0.6);</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_vtheta_max")) ROS_WARN("Used default parameter for pot_ctrl_vtheta_max [0.8]");</font>{}
-<font color="#00FF00">  nh_.param("pot_ctrl_vtheta_max", vtheta_max_, 0.8);</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_kv")) ROS_WARN("Used default parameter for pot_ctrl_kv [1.0]");</font>{}
-<font color="#00FF00">  nh_.param("pot_ctrl_kv", kv_, 1.0);</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_kp")) ROS_WARN("Used default parameter for pot_ctrl_kp [2.0]");</font>{}
-<font color="#00FF00">  nh_.param("pot_ctrl_kp", kp_, 2.0);</font>{}
-<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_virt_mass")) ROS_WARN("Used default parameter for pot_ctrl_virt_mass [0.8]");</font>{}
-<font color="#00FF00">  nh_.param("pot_ctrl_virt_mass", virt_mass_, 0.8);</font>{}
-  robot_footprint_ = loadRobotFootprint(local_costmap_nh_);
-    ROS_WARN("You have set more than 4 points as robot_footprint, cob_collision_velocity_filter can deal only with rectangular footprints so far!");
-<font color="#00FF00">  if(!nh_.hasParam("max_acceleration")) ROS_WARN("Used default parameter for max_acceleration [0.5, 0.5, 0.7]");</font>{}
-  XmlRpc::XmlRpcValue max_acc;
-    ROS_ASSERT(max_acc.getType() == XmlRpc::XmlRpcValue::TypeArray);
-    ax_max_ = (double)max_acc[0];
-    ay_max_ = (double)max_acc[1];
-    atheta_max_ = (double)max_acc[2];
-    ax_max_ = 0.5;
-    ay_max_ = 0.5;
-    atheta_max_ = 0.7;
-  last_time_ = ros::Time::now().toSec();
-  vx_last_ = 0.0;
-  vy_last_ = 0.0;
-  vtheta_last_ = 0.0;
-  dynCB_ = boost::bind(&CollisionVelocityFilter::dynamicReconfigureCB, this, _1, _2);
-  dyn_server_.setCallback(dynCB_);
-  pthread_mutex_lock(&m_mutex);
-  robot_twist_linear_ = twist->linear;
-  robot_twist_angular_ = twist->angular;
-  pthread_mutex_unlock(&m_mutex);
-  obstacleHandler();
-  performControllerStep();
-  pthread_mutex_lock(&m_mutex);
-  if(obstacles->cells.size()!=0) costmap_received_ = true;
-  last_costmap_received_ = * obstacles;
-    ROS_WARN("You specified a stop_threshold that is smaller than resolution of received costmap!");
-  pthread_mutex_unlock(&m_mutex);
-  cob_footprint_observer::GetFootprint srv = cob_footprint_observer::GetFootprint();
-    geometry_msgs::PolygonStamped footprint_poly = srv.response.footprint;
-    std::vector<geometry_msgs::Point> footprint;
-    geometry_msgs::Point pt;
-    for(unsigned int i=0;
-    for(unsigned int i=0; i<footprint_poly.polygon.points.size();
-      pt.x = footprint_poly.polygon.points[i].x;
-      pt.y = footprint_poly.polygon.points[i].y;
-      pt.z = footprint_poly.polygon.points[i].z;
-      footprint.push_back(pt);
-    pthread_mutex_lock(&m_mutex);
-    footprint_front_ = footprint_front_initial_;
-    footprint_rear_ = footprint_rear_initial_;
-    footprint_left_ = footprint_left_initial_;
-    footprint_right_ = footprint_right_initial_;
-    robot_footprint_ = footprint;
-    for(unsigned int i=0;
-    for(unsigned int i=0; i<footprint.size();
-      if(footprint[i].x > footprint_front_) footprint_front_ = footprint[i].x;
-      if(footprint[i].x < footprint_rear_) footprint_rear_ = footprint[i].x;
-      if(footprint[i].y > footprint_left_) footprint_left_ = footprint[i].y;
-      if(footprint[i].y < footprint_right_) footprint_right_ = footprint[i].y;
-    pthread_mutex_unlock(&m_mutex);
-    ROS_WARN("Cannot reach service /get_footprint");
-  pthread_mutex_lock(&m_mutex);
-  stop_threshold_ = config.stop_threshold;
-  obstacle_damping_dist_ = config.obstacle_damping_dist;
-    obstacle_damping_dist_ = stop_threshold_ + 0.01;
-    ROS_WARN("obstacle_damping_dist <= stop_threshold -> robot will stop without decceleration!");
-    ROS_WARN("Not changing influence_radius since obstacle_damping_dist and/or stop_threshold is bigger!");
-    influence_radius_ = config.influence_radius;
-    ROS_WARN("Turned off obstacle avoidance!");
-  pthread_mutex_unlock(&m_mutex);
-  double dt;
-  double vx_max, vy_max;
-  geometry_msgs::Twist cmd_vel;
-  cmd_vel.linear = robot_twist_linear_;
-  cmd_vel.angular = robot_twist_angular_;
-  dt = ros::Time::now().toSec() - last_time_;
-  last_time_ = ros::Time::now().toSec();
-    stopMovement();
-    return;
-  double vel_angle = atan2(cmd_vel.linear.y,cmd_vel.linear.x);
-  vx_max = v_max_ * fabs(cos(vel_angle));
-  if (vx_max > fabs(cmd_vel.linear.x)) vx_max = fabs(cmd_vel.linear.x);
-  vy_max = v_max_ * fabs(sin(vel_angle));
-  if (vy_max > fabs(cmd_vel.linear.y)) vy_max = fabs(cmd_vel.linear.y);
-    double F_x, F_y;
-    double vx_d, vy_d, vx_factor, vy_factor;
-    double kv_obst=kv_, vx_max_obst=vx_max, vy_max_obst=vy_max;
-    double obstacle_linear_slope_x = vx_max / (obstacle_damping_dist_ - stop_threshold_);
-    vx_max_obst = (closest_obstacle_dist_- stop_threshold_ + stop_threshold_/10.0f) * obstacle_linear_slope_x;
-    if(vx_max_obst > vx_max) vx_max_obst = vx_max;
-    else if(vx_max_obst < 0.0f) vx_max_obst = 0.0f;
-    double obstacle_linear_slope_y = vy_max / (obstacle_damping_dist_ - stop_threshold_);
-    vy_max_obst = (closest_obstacle_dist_- stop_threshold_ + stop_threshold_/10.0f) * obstacle_linear_slope_y;
-    if(vy_max_obst > vy_max) vy_max_obst = vy_max;
-    else if(vy_max_obst < 0.0f) vy_max_obst = 0.0f;
-    double closest_obstacle_dist_x = closest_obstacle_dist_ * cos(closest_obstacle_angle_);
-    double closest_obstacle_dist_y = closest_obstacle_dist_ * sin(closest_obstacle_angle_);
-    vx_d = kp_/kv_obst * closest_obstacle_dist_x;
-    vy_d = kp_/kv_obst * closest_obstacle_dist_y;
-    vx_factor = vx_max_obst / sqrt(vy_d*vy_d + vx_d*vx_d);
-    vy_factor = vy_max_obst / sqrt(vy_d*vy_d + vx_d*vx_d);
-    if(vx_factor > 1.0) vx_factor = 1.0;
-    if(vy_factor > 1.0) vy_factor = 1.0;
-    F_x = - kv_obst * vx_last_ + vx_factor * kp_ * closest_obstacle_dist_x;
-    F_y = - kv_obst * vy_last_ + vy_factor * kp_ * closest_obstacle_dist_y;
-    cmd_vel.linear.x = vx_last_ + F_x / virt_mass_ * dt;
-    cmd_vel.linear.y = vy_last_ + F_y / virt_mass_ * dt;
-  if (fabs(cmd_vel.linear.x) > vx_max) cmd_vel.linear.x = sign(cmd_vel.linear.x) * vx_max;
-  if (fabs(cmd_vel.linear.y) > vy_max) cmd_vel.linear.y = sign(cmd_vel.linear.y) * vy_max;
-  if (fabs(cmd_vel.angular.z) > vtheta_max_) cmd_vel.angular.z = sign(cmd_vel.angular.z) * vtheta_max_;
-      cmd_vel.linear.x = vx_last_ + ax_max_ * dt;
-      cmd_vel.linear.x = vx_last_ - ax_max_ * dt;
-      cmd_vel.linear.y = vy_last_ + ay_max_ * dt;
-      cmd_vel.linear.y = vy_last_ - ay_max_ * dt;
-      cmd_vel.angular.z = vtheta_last_ + atheta_max_ * dt;
-      cmd_vel.angular.z = vtheta_last_ - atheta_max_ * dt;
-  pthread_mutex_lock(&m_mutex);
-  vx_last_ = cmd_vel.linear.x;
-  vy_last_ = cmd_vel.linear.y;
-  vtheta_last_ = cmd_vel.angular.z;
-  pthread_mutex_unlock(&m_mutex);
-<font color="#FF0000">  topic_pub_command_.publish(cmd_vel);</font>{}
-  return;
-  pthread_mutex_lock(&m_mutex);
-    ROS_WARN("No costmap has been received by cob_collision_velocity_filter, the robot will drive without obstacle avoidance!");
-    closest_obstacle_dist_ = influence_radius_;
-    pthread_mutex_unlock(&m_mutex);
-    return;
-  closest_obstacle_dist_ = influence_radius_;
-  pthread_mutex_unlock(&m_mutex);
-  double cur_distance_to_center, cur_distance_to_border;
-  double obstacle_theta_robot, obstacle_delta_theta_robot, obstacle_dist_vel_dir;
-  bool cur_obstacle_relevant;
-  geometry_msgs::Point cur_obstacle_robot;
-  geometry_msgs::Point zero_position;
-  zero_position.x=0.0f;
-  zero_position.y=0.0f;
-  zero_position.z=0.0f;
-  bool use_circumscribed=true, use_tube=true;
-  double corner_front_left, corner_rear_left, corner_rear_right, corner_front_right;
-  corner_front_left = atan2(footprint_left_, footprint_front_);
-  corner_rear_left = atan2(footprint_left_, footprint_rear_);
-  corner_rear_right = atan2(footprint_right_, footprint_rear_);
-  corner_front_right = atan2(footprint_right_, footprint_front_);
-    use_tube = false;
-      use_circumscribed = false;
-      use_circumscribed = false;
-  double velocity_angle=0.0f, velocity_ortho_angle;
-  double corner_angle, delta_corner_angle;
-  double ortho_corner_dist;
-  double tube_left_border = 0.0f, tube_right_border = 0.0f;
-  double tube_left_origin = 0.0f, tube_right_origin = 0.0f;
-  double corner_dist, circumscribed_radius = 0.0f;
-  for(unsigned i = 0;
-  for(unsigned i = 0; i<robot_footprint_.size();
-    corner_dist = sqrt(robot_footprint_[i].x*robot_footprint_[i].x + robot_footprint_[i].y*robot_footprint_[i].y);
-    if(corner_dist > circumscribed_radius) circumscribed_radius = corner_dist;
-    velocity_angle = atan2(robot_twist_linear_.y, robot_twist_linear_.x);
-    velocity_ortho_angle = velocity_angle + M_PI / 2.0f;
-    for(unsigned i = 0;
-    for(unsigned i = 0; i<robot_footprint_.size();
-      corner_angle = atan2(robot_footprint_[i].y, robot_footprint_[i].x);
-      delta_corner_angle = velocity_ortho_angle - corner_angle;
-      corner_dist = sqrt(robot_footprint_[i].x*robot_footprint_[i].x + robot_footprint_[i].y*robot_footprint_[i].y);
-      ortho_corner_dist = cos(delta_corner_angle) * corner_dist;
-        tube_right_border = ortho_corner_dist;
-        tube_right_origin = sin(delta_corner_angle) * corner_dist;
-        tube_left_border = ortho_corner_dist;
-        tube_left_origin = sin(delta_corner_angle) * corner_dist;
-  pthread_mutex_lock(&m_mutex);
-  relevant_obstacles_.header = last_costmap_received_.header;
-  relevant_obstacles_.cell_width = last_costmap_received_.cell_width;
-  relevant_obstacles_.cell_height = last_costmap_received_.cell_height;
-  relevant_obstacles_.cells.clear();
-  for(unsigned int i = 0;
-  for(unsigned int i = 0; i < last_costmap_received_.cells.size();
-    cur_obstacle_relevant = false;
-    cur_distance_to_center = getDistance2d(zero_position, last_costmap_received_.cells[i]);
-      cur_obstacle_robot = last_costmap_received_.cells[i];
-        cur_obstacle_relevant = true;
-        relevant_obstacles_.cells.push_back(last_costmap_received_.cells[i]);
-        obstacle_theta_robot = atan2(cur_obstacle_robot.y, cur_obstacle_robot.x);
-      cur_obstacle_robot = last_costmap_received_.cells[i];
-        obstacle_theta_robot = atan2(cur_obstacle_robot.y, cur_obstacle_robot.x);
-        obstacle_delta_theta_robot = obstacle_theta_robot - velocity_angle;
-        obstacle_dist_vel_dir = sin(obstacle_delta_theta_robot) * cur_distance_to_center;
-              cur_obstacle_relevant = true;
-              relevant_obstacles_.cells.push_back(last_costmap_received_.cells[i]);
-              cur_obstacle_relevant = true;
-              relevant_obstacles_.cells.push_back(last_costmap_received_.cells[i]);
-        cur_distance_to_border = cur_distance_to_center - fabs(footprint_front_) / fabs(cos(obstacle_theta_robot));
-        cur_distance_to_border = cur_distance_to_center - fabs(footprint_left_) / fabs(sin(obstacle_theta_robot));
-        cur_distance_to_border = cur_distance_to_center - fabs(footprint_rear_) / fabs(cos(obstacle_theta_robot));
-        cur_distance_to_border = cur_distance_to_center - fabs(footprint_right_) / fabs(sin(obstacle_theta_robot));
-        closest_obstacle_dist_ = cur_distance_to_border;
-        closest_obstacle_angle_ = obstacle_theta_robot;
-  pthread_mutex_unlock(&m_mutex);
-<font color="#FF0000">  topic_pub_relevant_obstacles_.publish(relevant_obstacles_);</font>{}
-  std::vector<geometry_msgs::Point> footprint;
-  geometry_msgs::Point pt;
-  double padding;
-  std::string padding_param, footprint_param;
-    padding = 0.01;
-<font color="#00FF00">    node.param(padding_param, padding, 0.01);</font>{}
-  XmlRpc::XmlRpcValue footprint_list;
-  std::string footprint_string;
-  std::vector<std::string> footstring_list;
-    node.getParam(footprint_param, footprint_list);
-      footprint_string = std::string(footprint_list);
-        return footprint;
-      boost::erase_all(footprint_string, " ");
-      boost::char_separator<char> sep("[]");
-      boost::tokenizer<boost::char_separator<char> > tokens(footprint_string, sep);
-      footstring_list = std::vector<std::string>(tokens.begin(), tokens.end());
-      ROS_FATAL("The footprint must be specified as list of lists on the parameter server, %s was specified as %s", footprint_param.c_str(), std::string(footprint_list).c_str());
-      throw std::runtime_error("The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
-      for(int i = 0;
-      for(int i = 0; i < footprint_list.size();
-        XmlRpc::XmlRpcValue point = footprint_list[i];
-          ROS_FATAL("The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
-          throw std::runtime_error("The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
-          ROS_FATAL("Values in the footprint specification must be numbers");
-          throw std::runtime_error("Values in the footprint specification must be numbers");
-        pt.x = point[0].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(point[0]) : (double)(point[0]);
-        pt.x += sign(pt.x) * padding;
-          ROS_FATAL("Values in the footprint specification must be numbers");
-          throw std::runtime_error("Values in the footprint specification must be numbers");
-        pt.y = point[1].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(point[1]) : (double)(point[1]);
-        pt.y += sign(pt.y) * padding;
-        footprint.push_back(pt);
-<font color="#00FF00">        node.deleteParam(footprint_param);</font>{}
-        std::ostringstream oss;
-        bool first = true;
-            oss << "[[" << p.x << "," << p.y << "]";
-            first = false;
-            oss << ",[" << p.x << "," << p.y << "]";
-        oss << "]";
-<font color="#00FF00">        node.setParam(footprint_param, oss.str().c_str());</font>{}
-<font color="#00FF00">        node.setParam("footprint", oss.str().c_str());</font>{}
-      std::vector<geometry_msgs::Point> footprint_spec;
-      bool valid_foot = true;
-          boost::erase_all(t, " ");
-          boost::char_separator<char> pt_sep(",");
-          boost::tokenizer<boost::char_separator<char> > pt_tokens(t, pt_sep);
-          std::vector<std::string> point(pt_tokens.begin(), pt_tokens.end());
-            ROS_WARN("Each point must have exactly 2 coordinates");
-            valid_foot = false;
-            break;
-          std::vector<double>tmp_pt;
-            std::istringstream iss(p);
-            double temp;
-              tmp_pt.push_back(temp);
-              ROS_WARN("Each coordinate must convert to a double.");
-              valid_foot = false;
-              break;
-            break;
-          geometry_msgs::Point pt;
-          pt.x = tmp_pt[0];
-          pt.y = tmp_pt[1];
-          footprint_spec.push_back(pt);
-        footprint = footprint_spec;
-<font color="#00FF00">        node.setParam("footprint", footprint_string);</font>{}
-        ROS_FATAL("This footprint is not vaid it must be specified as a list of lists with at least 3 points, you specified %s", footprint_string.c_str());
-        throw std::runtime_error("The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
-  footprint_right_ = 0.0f;
-  footprint_right_ = 0.0f; footprint_left_ = 0.0f;
-  footprint_right_ = 0.0f; footprint_left_ = 0.0f; footprint_front_ = 0.0f;
-  footprint_right_ = 0.0f; footprint_left_ = 0.0f; footprint_front_ = 0.0f; footprint_rear_ = 0.0f;
-  for(unsigned int i=0;
-  for(unsigned int i=0; i<footprint.size();
-    if(footprint[i].x > footprint_front_) footprint_front_ = footprint[i].x;
-    if(footprint[i].x < footprint_rear_) footprint_rear_ = footprint[i].x;
-    if(footprint[i].y > footprint_left_) footprint_left_ = footprint[i].y;
-    if(footprint[i].y < footprint_right_) footprint_right_ = footprint[i].y;
-  ROS_DEBUG("Extracted rectangular footprint for cob_collision_velocity_filter: Front: %f, Rear %f, Left: %f, Right %f", footprint_front_, footprint_rear_, footprint_left_, footprint_right_);
-  return footprint;
-  return sqrt( pow(a.x - b.x,2) + pow(a.y - b.y,2) );
-  if(x >= 0.0f) return 1.0f;
-  else return -1.0f;
-    ROS_WARN("Found an obstacle inside robot_footprint: Skip!");
-    return false;
-  return true;
-  geometry_msgs::Twist stop_twist;
-  stop_twist.linear.x = 0.0f;
-  stop_twist.linear.x = 0.0f; stop_twist.linear.y = 0.0f;
-  stop_twist.linear.x = 0.0f; stop_twist.linear.y = 0.0f; stop_twist.linear.z = 0.0f;
-  stop_twist.angular.x = 0.0f;
-  stop_twist.angular.x = 0.0f; stop_twist.angular.y = 0.0f;
-  stop_twist.angular.x = 0.0f; stop_twist.angular.y = 0.0f; stop_twist.linear.z = 0.0f;
-<font color="#FF0000">  topic_pub_command_.publish(stop_twist);</font>{}
-  vx_last_ = 0.0;
-  vy_last_ = 0.0;
-  vtheta_last_ = 0.0;
-<font color="#FF0000">  ros::init(argc, argv, "cob_collision_velocity_filter");</font>{}
-  CollisionVelocityFilter collisionVelocityFilter;
-<font color="#FF0000">  ros::spin();</font>{}
-  return 0;
+1:<font color="#FF0000">  nh_ = ros::NodeHandle("~");</font>{}
+2:  m_mutex = PTHREAD_MUTEX_INITIALIZER;
+3:  std::string costmap_parameter_source;
+4:<font color="#00FF00">  if(!nh_.hasParam("costmap_parameter_source")) ROS_WARN("Checking default source [/local_costmap_node/costmap] for costmap parameters");</font>{}
+5:<font color="#00FF00">  nh_.param("costmap_parameter_source",costmap_parameter_source, std::string("/local_costmap_node/costmap"));</font>{}
+6:<font color="#FF0000">  ros::NodeHandle local_costmap_nh_(costmap_parameter_source);</font>{}
+7:<font color="#FF0000">  topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("command", 1);</font>{'type': 'geometry_msgs::Twist', 'name': 'command'}
+8:<font color="#FF0000">  topic_pub_relevant_obstacles_ = nh_.advertise<nav_msgs::GridCells>("relevant_obstacles", 1);</font>{'type': 'nav_msgs::GridCells', 'name': 'relevant_obstacles'}
+9:<font color="#FF0000">  joystick_velocity_sub_ = nh_.subscribe<geometry_msgs::Twist>("teleop_twist", 1, boost::bind(&CollisionVelocityFilter::joystickVelocityCB, this, _1));</font>{'type': 'geometry_msgs::Twist', 'name': 'teleop_twist'}
+10:<font color="#FF0000">  obstacles_sub_ = nh_.subscribe<nav_msgs::GridCells>("obstacles", 1, boost::bind(&CollisionVelocityFilter::obstaclesCB, this, _1));</font>{'type': 'nav_msgs::GridCells', 'name': 'obstacles'}
+11:<font color="#FF0000">  srv_client_get_footprint_ = nh_.serviceClient<cob_footprint_observer::GetFootprint>("/get_footprint");</font>{}
+12:  double footprint_update_frequency;
+13:<font color="#00FF00">  if(!nh_.hasParam("footprint_update_frequency")) ROS_WARN("Used default parameter for footprint_update_frequency [1.0 Hz].");</font>{}
+14:<font color="#00FF00">  nh_.param("footprint_update_frequency",footprint_update_frequency,1.0);</font>{}
+15:  get_footprint_timer_ = nh_.createTimer(ros::Duration(1/footprint_update_frequency), boost::bind(&CollisionVelocityFilter::getFootprintServiceCB, this, _1));
+16:<font color="#00FF00">  if(!local_costmap_nh_.hasParam(costmap_parameter_source+"/global_frame")) ROS_WARN("Used default parameter for global_frame [/base_link]");</font>{}
+17:<font color="#00FF00">  local_costmap_nh_.param(costmap_parameter_source+"/global_frame", global_frame_, std::string("/base_link"));</font>{}
+18:<font color="#00FF00">  if(!local_costmap_nh_.hasParam(costmap_parameter_source+"/robot_base_frame")) ROS_WARN("Used default parameter for robot_frame [/base_link]");</font>{}
+19:<font color="#00FF00">  local_costmap_nh_.param(costmap_parameter_source+"/robot_base_frame", robot_frame_, std::string("/base_link"));</font>{}
+20:<font color="#00FF00">  if(!nh_.hasParam("influence_radius")) ROS_WARN("Used default parameter for influence_radius [1.5 m]");</font>{}
+21:<font color="#00FF00">  nh_.param("influence_radius", influence_radius_, 1.5);</font>{}
+22:  closest_obstacle_dist_ = influence_radius_;
+23:  closest_obstacle_angle_ = 0.0;
+24:<font color="#00FF00">  if(!nh_.hasParam("stop_threshold")) ROS_WARN("Used default parameter for stop_threshold [0.1 m]");</font>{}
+25:<font color="#00FF00">  nh_.param("stop_threshold", stop_threshold_, 0.10);</font>{}
+26:<font color="#00FF00">  if(!nh_.hasParam("obstacle_damping_dist")) ROS_WARN("Used default parameter for obstacle_damping_dist [5.0 m]");</font>{}
+27:<font color="#00FF00">  nh_.param("obstacle_damping_dist", obstacle_damping_dist_, 5.0);</font>{}
+28:    obstacle_damping_dist_ = stop_threshold_ + 0.01;
+29:    ROS_WARN("obstacle_damping_dist <= stop_threshold -> robot will stop without decceleration!");
+30:<font color="#00FF00">  if(!nh_.hasParam("use_circumscribed_threshold")) ROS_WARN("Used default parameter for use_circumscribed_threshold_ [0.2 rad/s]");</font>{}
+31:<font color="#00FF00">  nh_.param("use_circumscribed_threshold", use_circumscribed_threshold_, 0.20);</font>{}
+32:<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_vmax")) ROS_WARN("Used default parameter for pot_ctrl_vmax [0.6]");</font>{}
+33:<font color="#00FF00">  nh_.param("pot_ctrl_vmax", v_max_, 0.6);</font>{}
+34:<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_vtheta_max")) ROS_WARN("Used default parameter for pot_ctrl_vtheta_max [0.8]");</font>{}
+35:<font color="#00FF00">  nh_.param("pot_ctrl_vtheta_max", vtheta_max_, 0.8);</font>{}
+36:<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_kv")) ROS_WARN("Used default parameter for pot_ctrl_kv [1.0]");</font>{}
+37:<font color="#00FF00">  nh_.param("pot_ctrl_kv", kv_, 1.0);</font>{}
+38:<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_kp")) ROS_WARN("Used default parameter for pot_ctrl_kp [2.0]");</font>{}
+39:<font color="#00FF00">  nh_.param("pot_ctrl_kp", kp_, 2.0);</font>{}
+40:<font color="#00FF00">  if(!nh_.hasParam("pot_ctrl_virt_mass")) ROS_WARN("Used default parameter for pot_ctrl_virt_mass [0.8]");</font>{}
+41:<font color="#00FF00">  nh_.param("pot_ctrl_virt_mass", virt_mass_, 0.8);</font>{}
+42:  robot_footprint_ = loadRobotFootprint(local_costmap_nh_);
+43:    ROS_WARN("You have set more than 4 points as robot_footprint, cob_collision_velocity_filter can deal only with rectangular footprints so far!");
+44:<font color="#00FF00">  if(!nh_.hasParam("max_acceleration")) ROS_WARN("Used default parameter for max_acceleration [0.5, 0.5, 0.7]");</font>{}
+45:  XmlRpc::XmlRpcValue max_acc;
+46:    ROS_ASSERT(max_acc.getType() == XmlRpc::XmlRpcValue::TypeArray);
+47:    ax_max_ = (double)max_acc[0];
+48:    ay_max_ = (double)max_acc[1];
+49:    atheta_max_ = (double)max_acc[2];
+50:    ax_max_ = 0.5;
+51:    ay_max_ = 0.5;
+52:    atheta_max_ = 0.7;
+53:  last_time_ = ros::Time::now().toSec();
+54:  vx_last_ = 0.0;
+55:  vy_last_ = 0.0;
+56:  vtheta_last_ = 0.0;
+57:  dynCB_ = boost::bind(&CollisionVelocityFilter::dynamicReconfigureCB, this, _1, _2);
+58:  dyn_server_.setCallback(dynCB_);
+59:  pthread_mutex_lock(&m_mutex);
+60:  robot_twist_linear_ = twist->linear;
+61:  robot_twist_angular_ = twist->angular;
+62:  pthread_mutex_unlock(&m_mutex);
+63:  obstacleHandler();
+64:  performControllerStep();
+65:  pthread_mutex_lock(&m_mutex);
+66:  if(obstacles->cells.size()!=0) costmap_received_ = true;
+67:  last_costmap_received_ = * obstacles;
+68:    ROS_WARN("You specified a stop_threshold that is smaller than resolution of received costmap!");
+69:  pthread_mutex_unlock(&m_mutex);
+70:  cob_footprint_observer::GetFootprint srv = cob_footprint_observer::GetFootprint();
+71:    geometry_msgs::PolygonStamped footprint_poly = srv.response.footprint;
+72:    std::vector<geometry_msgs::Point> footprint;
+73:    geometry_msgs::Point pt;
+74:    for(unsigned int i=0;
+75:    for(unsigned int i=0; i<footprint_poly.polygon.points.size();
+76:      pt.x = footprint_poly.polygon.points[i].x;
+77:      pt.y = footprint_poly.polygon.points[i].y;
+78:      pt.z = footprint_poly.polygon.points[i].z;
+79:      footprint.push_back(pt);
+80:    pthread_mutex_lock(&m_mutex);
+81:    footprint_front_ = footprint_front_initial_;
+82:    footprint_rear_ = footprint_rear_initial_;
+83:    footprint_left_ = footprint_left_initial_;
+84:    footprint_right_ = footprint_right_initial_;
+85:    robot_footprint_ = footprint;
+86:    for(unsigned int i=0;
+87:    for(unsigned int i=0; i<footprint.size();
+88:      if(footprint[i].x > footprint_front_) footprint_front_ = footprint[i].x;
+89:      if(footprint[i].x < footprint_rear_) footprint_rear_ = footprint[i].x;
+90:      if(footprint[i].y > footprint_left_) footprint_left_ = footprint[i].y;
+91:      if(footprint[i].y < footprint_right_) footprint_right_ = footprint[i].y;
+92:    pthread_mutex_unlock(&m_mutex);
+93:    ROS_WARN("Cannot reach service /get_footprint");
+94:  pthread_mutex_lock(&m_mutex);
+95:  stop_threshold_ = config.stop_threshold;
+96:  obstacle_damping_dist_ = config.obstacle_damping_dist;
+97:    obstacle_damping_dist_ = stop_threshold_ + 0.01;
+98:    ROS_WARN("obstacle_damping_dist <= stop_threshold -> robot will stop without decceleration!");
+99:    ROS_WARN("Not changing influence_radius since obstacle_damping_dist and/or stop_threshold is bigger!");
+100:    influence_radius_ = config.influence_radius;
+101:    ROS_WARN("Turned off obstacle avoidance!");
+102:  pthread_mutex_unlock(&m_mutex);
+103:  double dt;
+104:  double vx_max, vy_max;
+105:  geometry_msgs::Twist cmd_vel;
+106:  cmd_vel.linear = robot_twist_linear_;
+107:  cmd_vel.angular = robot_twist_angular_;
+108:  dt = ros::Time::now().toSec() - last_time_;
+109:  last_time_ = ros::Time::now().toSec();
+110:    stopMovement();
+111:    return;
+112:  double vel_angle = atan2(cmd_vel.linear.y,cmd_vel.linear.x);
+113:  vx_max = v_max_ * fabs(cos(vel_angle));
+114:  if (vx_max > fabs(cmd_vel.linear.x)) vx_max = fabs(cmd_vel.linear.x);
+115:  vy_max = v_max_ * fabs(sin(vel_angle));
+116:  if (vy_max > fabs(cmd_vel.linear.y)) vy_max = fabs(cmd_vel.linear.y);
+117:    double F_x, F_y;
+118:    double vx_d, vy_d, vx_factor, vy_factor;
+119:    double kv_obst=kv_, vx_max_obst=vx_max, vy_max_obst=vy_max;
+120:    double obstacle_linear_slope_x = vx_max / (obstacle_damping_dist_ - stop_threshold_);
+121:    vx_max_obst = (closest_obstacle_dist_- stop_threshold_ + stop_threshold_/10.0f) * obstacle_linear_slope_x;
+122:    if(vx_max_obst > vx_max) vx_max_obst = vx_max;
+123:    else if(vx_max_obst < 0.0f) vx_max_obst = 0.0f;
+124:    double obstacle_linear_slope_y = vy_max / (obstacle_damping_dist_ - stop_threshold_);
+125:    vy_max_obst = (closest_obstacle_dist_- stop_threshold_ + stop_threshold_/10.0f) * obstacle_linear_slope_y;
+126:    if(vy_max_obst > vy_max) vy_max_obst = vy_max;
+127:    else if(vy_max_obst < 0.0f) vy_max_obst = 0.0f;
+128:    double closest_obstacle_dist_x = closest_obstacle_dist_ * cos(closest_obstacle_angle_);
+129:    double closest_obstacle_dist_y = closest_obstacle_dist_ * sin(closest_obstacle_angle_);
+130:    vx_d = kp_/kv_obst * closest_obstacle_dist_x;
+131:    vy_d = kp_/kv_obst * closest_obstacle_dist_y;
+132:    vx_factor = vx_max_obst / sqrt(vy_d*vy_d + vx_d*vx_d);
+133:    vy_factor = vy_max_obst / sqrt(vy_d*vy_d + vx_d*vx_d);
+134:    if(vx_factor > 1.0) vx_factor = 1.0;
+135:    if(vy_factor > 1.0) vy_factor = 1.0;
+136:    F_x = - kv_obst * vx_last_ + vx_factor * kp_ * closest_obstacle_dist_x;
+137:    F_y = - kv_obst * vy_last_ + vy_factor * kp_ * closest_obstacle_dist_y;
+138:    cmd_vel.linear.x = vx_last_ + F_x / virt_mass_ * dt;
+139:    cmd_vel.linear.y = vy_last_ + F_y / virt_mass_ * dt;
+140:  if (fabs(cmd_vel.linear.x) > vx_max) cmd_vel.linear.x = sign(cmd_vel.linear.x) * vx_max;
+141:  if (fabs(cmd_vel.linear.y) > vy_max) cmd_vel.linear.y = sign(cmd_vel.linear.y) * vy_max;
+142:  if (fabs(cmd_vel.angular.z) > vtheta_max_) cmd_vel.angular.z = sign(cmd_vel.angular.z) * vtheta_max_;
+143:      cmd_vel.linear.x = vx_last_ + ax_max_ * dt;
+144:      cmd_vel.linear.x = vx_last_ - ax_max_ * dt;
+145:      cmd_vel.linear.y = vy_last_ + ay_max_ * dt;
+146:      cmd_vel.linear.y = vy_last_ - ay_max_ * dt;
+147:      cmd_vel.angular.z = vtheta_last_ + atheta_max_ * dt;
+148:      cmd_vel.angular.z = vtheta_last_ - atheta_max_ * dt;
+149:  pthread_mutex_lock(&m_mutex);
+150:  vx_last_ = cmd_vel.linear.x;
+151:  vy_last_ = cmd_vel.linear.y;
+152:  vtheta_last_ = cmd_vel.angular.z;
+153:  pthread_mutex_unlock(&m_mutex);
+154:<font color="#FF0000">  topic_pub_command_.publish(cmd_vel);</font>{}
+155:  return;
+156:  pthread_mutex_lock(&m_mutex);
+157:    ROS_WARN("No costmap has been received by cob_collision_velocity_filter, the robot will drive without obstacle avoidance!");
+158:    closest_obstacle_dist_ = influence_radius_;
+159:    pthread_mutex_unlock(&m_mutex);
+160:    return;
+161:  closest_obstacle_dist_ = influence_radius_;
+162:  pthread_mutex_unlock(&m_mutex);
+163:  double cur_distance_to_center, cur_distance_to_border;
+164:  double obstacle_theta_robot, obstacle_delta_theta_robot, obstacle_dist_vel_dir;
+165:  bool cur_obstacle_relevant;
+166:  geometry_msgs::Point cur_obstacle_robot;
+167:  geometry_msgs::Point zero_position;
+168:  zero_position.x=0.0f;
+169:  zero_position.y=0.0f;
+170:  zero_position.z=0.0f;
+171:  bool use_circumscribed=true, use_tube=true;
+172:  double corner_front_left, corner_rear_left, corner_rear_right, corner_front_right;
+173:  corner_front_left = atan2(footprint_left_, footprint_front_);
+174:  corner_rear_left = atan2(footprint_left_, footprint_rear_);
+175:  corner_rear_right = atan2(footprint_right_, footprint_rear_);
+176:  corner_front_right = atan2(footprint_right_, footprint_front_);
+177:    use_tube = false;
+178:      use_circumscribed = false;
+179:      use_circumscribed = false;
+180:  double velocity_angle=0.0f, velocity_ortho_angle;
+181:  double corner_angle, delta_corner_angle;
+182:  double ortho_corner_dist;
+183:  double tube_left_border = 0.0f, tube_right_border = 0.0f;
+184:  double tube_left_origin = 0.0f, tube_right_origin = 0.0f;
+185:  double corner_dist, circumscribed_radius = 0.0f;
+186:  for(unsigned i = 0;
+187:  for(unsigned i = 0; i<robot_footprint_.size();
+188:    corner_dist = sqrt(robot_footprint_[i].x*robot_footprint_[i].x + robot_footprint_[i].y*robot_footprint_[i].y);
+189:    if(corner_dist > circumscribed_radius) circumscribed_radius = corner_dist;
+190:    velocity_angle = atan2(robot_twist_linear_.y, robot_twist_linear_.x);
+191:    velocity_ortho_angle = velocity_angle + M_PI / 2.0f;
+192:    for(unsigned i = 0;
+193:    for(unsigned i = 0; i<robot_footprint_.size();
+194:      corner_angle = atan2(robot_footprint_[i].y, robot_footprint_[i].x);
+195:      delta_corner_angle = velocity_ortho_angle - corner_angle;
+196:      corner_dist = sqrt(robot_footprint_[i].x*robot_footprint_[i].x + robot_footprint_[i].y*robot_footprint_[i].y);
+197:      ortho_corner_dist = cos(delta_corner_angle) * corner_dist;
+198:        tube_right_border = ortho_corner_dist;
+199:        tube_right_origin = sin(delta_corner_angle) * corner_dist;
+200:        tube_left_border = ortho_corner_dist;
+201:        tube_left_origin = sin(delta_corner_angle) * corner_dist;
+202:  pthread_mutex_lock(&m_mutex);
+203:  relevant_obstacles_.header = last_costmap_received_.header;
+204:  relevant_obstacles_.cell_width = last_costmap_received_.cell_width;
+205:  relevant_obstacles_.cell_height = last_costmap_received_.cell_height;
+206:  relevant_obstacles_.cells.clear();
+207:  for(unsigned int i = 0;
+208:  for(unsigned int i = 0; i < last_costmap_received_.cells.size();
+209:    cur_obstacle_relevant = false;
+210:    cur_distance_to_center = getDistance2d(zero_position, last_costmap_received_.cells[i]);
+211:      cur_obstacle_robot = last_costmap_received_.cells[i];
+212:        cur_obstacle_relevant = true;
+213:        relevant_obstacles_.cells.push_back(last_costmap_received_.cells[i]);
+214:        obstacle_theta_robot = atan2(cur_obstacle_robot.y, cur_obstacle_robot.x);
+215:      cur_obstacle_robot = last_costmap_received_.cells[i];
+216:        obstacle_theta_robot = atan2(cur_obstacle_robot.y, cur_obstacle_robot.x);
+217:        obstacle_delta_theta_robot = obstacle_theta_robot - velocity_angle;
+218:        obstacle_dist_vel_dir = sin(obstacle_delta_theta_robot) * cur_distance_to_center;
+219:              cur_obstacle_relevant = true;
+220:              relevant_obstacles_.cells.push_back(last_costmap_received_.cells[i]);
+221:              cur_obstacle_relevant = true;
+222:              relevant_obstacles_.cells.push_back(last_costmap_received_.cells[i]);
+223:        cur_distance_to_border = cur_distance_to_center - fabs(footprint_front_) / fabs(cos(obstacle_theta_robot));
+224:        cur_distance_to_border = cur_distance_to_center - fabs(footprint_left_) / fabs(sin(obstacle_theta_robot));
+225:        cur_distance_to_border = cur_distance_to_center - fabs(footprint_rear_) / fabs(cos(obstacle_theta_robot));
+226:        cur_distance_to_border = cur_distance_to_center - fabs(footprint_right_) / fabs(sin(obstacle_theta_robot));
+227:        closest_obstacle_dist_ = cur_distance_to_border;
+228:        closest_obstacle_angle_ = obstacle_theta_robot;
+229:  pthread_mutex_unlock(&m_mutex);
+230:<font color="#FF0000">  topic_pub_relevant_obstacles_.publish(relevant_obstacles_);</font>{}
+231:  std::vector<geometry_msgs::Point> footprint;
+232:  geometry_msgs::Point pt;
+233:  double padding;
+234:  std::string padding_param, footprint_param;
+235:    padding = 0.01;
+236:<font color="#00FF00">    node.param(padding_param, padding, 0.01);</font>{}
+237:  XmlRpc::XmlRpcValue footprint_list;
+238:  std::string footprint_string;
+239:  std::vector<std::string> footstring_list;
+240:    node.getParam(footprint_param, footprint_list);
+241:      footprint_string = std::string(footprint_list);
+242:        return footprint;
+243:      boost::erase_all(footprint_string, " ");
+244:      boost::char_separator<char> sep("[]");
+245:      boost::tokenizer<boost::char_separator<char> > tokens(footprint_string, sep);
+246:      footstring_list = std::vector<std::string>(tokens.begin(), tokens.end());
+247:      ROS_FATAL("The footprint must be specified as list of lists on the parameter server, %s was specified as %s", footprint_param.c_str(), std::string(footprint_list).c_str());
+248:      throw std::runtime_error("The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
+249:      for(int i = 0;
+250:      for(int i = 0; i < footprint_list.size();
+251:        XmlRpc::XmlRpcValue point = footprint_list[i];
+252:          ROS_FATAL("The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
+253:          throw std::runtime_error("The footprint must be specified as list of lists on the parameter server eg: [[x1, y1], [x2, y2], ..., [xn, yn]], but this spec is not of that form");
+254:          ROS_FATAL("Values in the footprint specification must be numbers");
+255:          throw std::runtime_error("Values in the footprint specification must be numbers");
+256:        pt.x = point[0].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(point[0]) : (double)(point[0]);
+257:        pt.x += sign(pt.x) * padding;
+258:          ROS_FATAL("Values in the footprint specification must be numbers");
+259:          throw std::runtime_error("Values in the footprint specification must be numbers");
+260:        pt.y = point[1].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(point[1]) : (double)(point[1]);
+261:        pt.y += sign(pt.y) * padding;
+262:        footprint.push_back(pt);
+263:<font color="#00FF00">        node.deleteParam(footprint_param);</font>{}
+264:        std::ostringstream oss;
+265:        bool first = true;
+266:            oss << "[[" << p.x << "," << p.y << "]";
+267:            first = false;
+268:            oss << ",[" << p.x << "," << p.y << "]";
+269:        oss << "]";
+270:<font color="#00FF00">        node.setParam(footprint_param, oss.str().c_str());</font>{}
+271:<font color="#00FF00">        node.setParam("footprint", oss.str().c_str());</font>{}
+272:      std::vector<geometry_msgs::Point> footprint_spec;
+273:      bool valid_foot = true;
+274:          boost::erase_all(t, " ");
+275:          boost::char_separator<char> pt_sep(",");
+276:          boost::tokenizer<boost::char_separator<char> > pt_tokens(t, pt_sep);
+277:          std::vector<std::string> point(pt_tokens.begin(), pt_tokens.end());
+278:            ROS_WARN("Each point must have exactly 2 coordinates");
+279:            valid_foot = false;
+280:            break;
+281:          std::vector<double>tmp_pt;
+282:            std::istringstream iss(p);
+283:            double temp;
+284:              tmp_pt.push_back(temp);
+285:              ROS_WARN("Each coordinate must convert to a double.");
+286:              valid_foot = false;
+287:              break;
+288:            break;
+289:          geometry_msgs::Point pt;
+290:          pt.x = tmp_pt[0];
+291:          pt.y = tmp_pt[1];
+292:          footprint_spec.push_back(pt);
+293:        footprint = footprint_spec;
+294:<font color="#00FF00">        node.setParam("footprint", footprint_string);</font>{}
+295:        ROS_FATAL("This footprint is not vaid it must be specified as a list of lists with at least 3 points, you specified %s", footprint_string.c_str());
+296:        throw std::runtime_error("The footprint must be specified as list of lists on the parameter server with at least 3 points eg: [[x1, y1], [x2, y2], ..., [xn, yn]]");
+297:  footprint_right_ = 0.0f;
+298:  footprint_right_ = 0.0f; footprint_left_ = 0.0f;
+299:  footprint_right_ = 0.0f; footprint_left_ = 0.0f; footprint_front_ = 0.0f;
+300:  footprint_right_ = 0.0f; footprint_left_ = 0.0f; footprint_front_ = 0.0f; footprint_rear_ = 0.0f;
+301:  for(unsigned int i=0;
+302:  for(unsigned int i=0; i<footprint.size();
+303:    if(footprint[i].x > footprint_front_) footprint_front_ = footprint[i].x;
+304:    if(footprint[i].x < footprint_rear_) footprint_rear_ = footprint[i].x;
+305:    if(footprint[i].y > footprint_left_) footprint_left_ = footprint[i].y;
+306:    if(footprint[i].y < footprint_right_) footprint_right_ = footprint[i].y;
+307:  ROS_DEBUG("Extracted rectangular footprint for cob_collision_velocity_filter: Front: %f, Rear %f, Left: %f, Right %f", footprint_front_, footprint_rear_, footprint_left_, footprint_right_);
+308:  return footprint;
+309:  return sqrt( pow(a.x - b.x,2) + pow(a.y - b.y,2) );
+310:  if(x >= 0.0f) return 1.0f;
+311:  else return -1.0f;
+312:    ROS_WARN("Found an obstacle inside robot_footprint: Skip!");
+313:    return false;
+314:  return true;
+315:  geometry_msgs::Twist stop_twist;
+316:  stop_twist.linear.x = 0.0f;
+317:  stop_twist.linear.x = 0.0f; stop_twist.linear.y = 0.0f;
+318:  stop_twist.linear.x = 0.0f; stop_twist.linear.y = 0.0f; stop_twist.linear.z = 0.0f;
+319:  stop_twist.angular.x = 0.0f;
+320:  stop_twist.angular.x = 0.0f; stop_twist.angular.y = 0.0f;
+321:  stop_twist.angular.x = 0.0f; stop_twist.angular.y = 0.0f; stop_twist.linear.z = 0.0f;
+322:<font color="#FF0000">  topic_pub_command_.publish(stop_twist);</font>{}
+323:  vx_last_ = 0.0;
+324:  vy_last_ = 0.0;
+325:  vtheta_last_ = 0.0;
+326:<font color="#FF0000">  ros::init(argc, argv, "cob_collision_velocity_filter");</font>{}
+327:  CollisionVelocityFilter collisionVelocityFilter;
+328:<font color="#FF0000">  ros::spin();</font>{}
+329:  return 0;
 </pre>
 </body>
 </html>

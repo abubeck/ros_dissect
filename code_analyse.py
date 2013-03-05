@@ -64,15 +64,16 @@ class RosWiki:
         f.write( """    <table summary=\"code examples\">\n 
         <tr>\n
         <td><pre style="border: 1px solid #888;padding: 2px">\n""")
-
+        line_counter = 0
         for line in code:
+            line_counter += 1
             if(line[1] != 0):
-                if(line[1] == "param"):
-                    f.write( "<font color=\"#00FF00\">" + str(line[2])+ "</font>" + str(line[3]) + "\n")
+                if(line[1] == "param" or line[1] == "param_val"):
+                    f.write(str(line_counter)+":"+ "<font color=\"#00FF00\">" + str(line[2])+ "</font>" + str(line[3]) + "\n")
                 else:
-                    f.write( "<font color=\"#FF0000\">" + str(line[2])+ "</font>" + str(line[3]) + "\n")
+                    f.write(str(line_counter)+":"+ "<font color=\"#FF0000\">" + str(line[2])+ "</font>" + str(line[3]) + "\n")
             else:
-                f.write( line[2] +"\n")
+                f.write(str(line_counter)+":"+ line[2] +"\n")
 
         f.write( "</pre>\n" )
         f.write( "</body>\n")
@@ -84,9 +85,34 @@ class RosWiki:
         pass
 
     #Berechne Metrik fuer Separierung der 5C
-    def analyse_separation_metric(self, code):
+    def analyse_separation_metric(self, code, num_of_param, num_of_comm, num_of_user):       
+        print "Expecting", num_of_param, "lines of parameters,", num_of_comm, "lines of communication and", num_of_user, "lines of user code"
+        expecting = ["param", "user", "comm"] #First we expect any concern
+        counters = {"param": num_of_param, "comm": num_of_comm, "user": num_of_user}
+        penalty = 0
+        line_counter = 0
         for line in code:
-            pass
+            line_counter += 1
+            if(line[1] == "param" or line[1] == "param_val"):
+                line_is = "param"
+            elif(line[1] == 0):
+                line_is = "user"
+            else:
+                line_is = "comm"
+            counters[line_is] -= 1
+            if(line_is in expecting and counters[line_is] > 0): #We look if the current line is what we expect
+                expecting = [line_is] #Next line we expect the same type of concern
+            else:
+                if(counters[line_is] > 0): #we count that as penalty
+                    print "Penalty at line", line_counter
+                    penalty += 1
+                expecting = []
+                for key, value in counters.iteritems():
+                    if(value != 0):
+                        expecting.append(key) # we expect everything we have left
+        print "Overall penalty: ", penalty
+        return float(penalty)/len(code)
+
 
     #Zaehle lines of code fuer die verschiedenen Aspekte um Nachzuweisen, wie viel Code man schreiben muesste ohne MDE
     def analyse_code_ratios(self, code):
@@ -99,21 +125,25 @@ class RosWiki:
         pass
 
     def code_to_ros_ratio(self, code):
-        ros_counter = 0
+        param_counter = 0
+        comm_counter = 0
         user_counter = 0
         for line in code:
-            if(line[1] != 0):
-                ros_counter +=1
-            else:
+            if(line[1] == "param" or line[1] == "param_val"):
+                param_counter +=1
+            elif(line[1] == 0):
                 user_counter +=1
-        print "Found", ros_counter, "lines of ROS Code and", user_counter, "lines of common code in total" , len(code), " lines of code" 
-        return [len(code), ros_counter]
+            else:
+                comm_counter +=1  
+        print "Found", param_counter+comm_counter , "lines of ROS Code and", user_counter, "lines of common code in total" , len(code), " lines of code" 
+        return [len(code), param_counter, comm_counter]
 
 if __name__ == '__main__':
     if(len(sys.argv) == 2):
         p = Parser(sys.argv[1])
     w = RosWiki()
     w.pretty_print(p.parsed_lines)
-    w.code_to_ros_ratio(p.parsed_lines)
+    [lloc, num_of_param, num_of_comm] = w.code_to_ros_ratio(p.parsed_lines)
     w.model_print(p.parsed_lines)
+    print "Sep: ", w.analyse_separation_metric(p.parsed_lines, num_of_param, num_of_comm, lloc-num_of_param-num_of_comm)
 

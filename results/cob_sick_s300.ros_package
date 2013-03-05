@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
+	TUT: 	ros::init(argc, argv, "scanner_filter");{}
+	TUT: 	ros::init(argc, argv, "sick_s300");{}
+	TUT:   ros::init(argc, argv, "scanner_unifier");{}
+		<publisher name="scan_filtered" eventHandler="" msg="sensor_msgs::LaserScan"/>
+		<publisher name="scan" eventHandler="" msg="sensor_msgs::LaserScan"/>
+		<publisher name="/diagnostics" eventHandler="" msg="diagnostic_msgs::DiagnosticArray"/>
+		<publisher name="scan_unified" eventHandler="" msg="sensor_msgs::LaserScan"/>
+sub {}
+	</node>
+</ros:Package>

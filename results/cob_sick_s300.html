@@ -1,0 +1,473 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+1:typedef unsigned char BYTE;
+2:const double ScannerSickS300::c_dPi = 3.14159265358979323846;
+3:const unsigned char ScannerSickS300::c_StartBytes[10] = {0,0,0,0,0,0,0,0,255,7};
+4:unsigned char ScannerSickS300::m_iScanId = 7;
+5:	 };
+6:	m_Param.iDataLength = 1104;
+7:	m_Param.iHeaderLength = 24;
+8:	m_Param.iNumScanPoints = 541;
+9:	m_Param.dScale = 0.01;
+10:	m_Param.dStartAngle = -135.0/180.0*c_dPi;
+11:	m_Param.dStopAngle = 135.0/180.0*c_dPi;
+12:	m_dBaudMult = 1.0;
+13:	m_viScanRaw.assign(541, 0);
+14:	m_iPosReadBuf2 = 0;
+15:	m_SerialIO.close();
+16:    int bRetSerial;
+17:		return false;
+18:	m_iScanId = iScanId;
+19:	m_SerialIO.setBaudRate(iBaudRate);
+20:	m_SerialIO.setDeviceName(pcPort);
+21:	m_SerialIO.setBufferSize(READ_BUF_SIZE - 10 , WRITE_BUF_SIZE -10 );
+22:	m_SerialIO.setHandshake(SerialIO::HS_NONE);
+23:	m_SerialIO.setMultiplier(m_dBaudMult);
+24:	bRetSerial = m_SerialIO.open();
+25:	m_SerialIO.setTimeout(0.0);
+26:	m_SerialIO.SetFormat(8, SerialIO::PA_NONE, SerialIO::SB_ONE);
+27:	    m_iPosReadBuf2 = 0;
+28:	    m_SerialIO.purge();
+29:	    return true;
+30:        return false;
+31:	m_iPosReadBuf2 = 0;
+32:	m_SerialIO.purge();
+33:	bool bRet = false;
+34:	int i,j;
+35:	int iNumRead;
+36:	int iNumData;
+37:	int iFirstByteOfHeader;
+38:	int iFirstByteOfData;
+39:	unsigned int iTelegramNumber;
+40:	unsigned int uiReadCRC;
+41:	unsigned int uiCalcCRC;
+42:	std::vector<ScanPolarType> vecScanPolar;
+43:	vecScanPolar.resize(m_Param.iNumScanPoints);
+44:	iNumRead = m_SerialIO.readNonBlocking((char*)m_ReadBuf, SCANNER_S300_READ_BUF_SIZE-2);
+45:	  	printf("Not enough data in queue, read data at slower rate!\n");
+46:		return false;
+47:	for(i=iNumRead-m_Param.iDataLength;
+48:	for(i=iNumRead-m_Param.iDataLength; i>=0;
+49:			iFirstByteOfHeader = i;
+50:			iTimestamp = (m_ReadBuf[i+17]<<24) | (m_ReadBuf[i+16]<<16) | (m_ReadBuf[i+15]<<8) |  (m_ReadBuf[i+14]);
+51:			iTelegramNumber = (m_ReadBuf[i+19]<<8) |  (m_ReadBuf[i+18]);
+52:				iTimeNow = (m_ReadBuf[i+m_Param.iDataLength+4+17]<<24) | (m_ReadBuf[i+m_Param.iDataLength+4+16]<<16) | (m_ReadBuf[i+m_Param.iDataLength+4+15]<<8) |  (m_ReadBuf[i+m_Param.iDataLength+4+14]);
+53:			} else iTimeNow = 0;
+54:			iFirstByteOfData = i + m_Param.iHeaderLength;
+55:										 m_ReadBuf[iFirstByteOfHeader + 7]);
+56:			  continue;
+57:										m_ReadBuf[iFirstByteOfHeader + 4 + iNumData - 2]);
+58:			uiCalcCRC = createCRC(&m_ReadBuf[iFirstByteOfHeader + 4], m_Param.iDataLength - 2);
+59:				for(j=0;
+60:				for(j=0; j<m_Param.iNumScanPoints;
+61:													 m_ReadBuf[iFirstByteOfData + 2 * j ]);
+62:				bRet = true;
+63:				break;
+64:		convertScanToPolar(m_viScanRaw, vecScanPolar);
+65:		vdDistanceM.resize(vecScanPolar.size());
+66:		vdAngleRAD.resize(vecScanPolar.size());
+67:		vdIntensityAU.resize(vecScanPolar.size());
+68:		for(unsigned int i=0;
+69:		for(unsigned int i=0; i < vecScanPolar.size();
+70:			vdDistanceM[i] = vecScanPolar[i].dr;
+71:			vdAngleRAD[i] = vecScanPolar[i].da;
+72:			vdIntensityAU[i] = vecScanPolar[i].di;
+73:	return bRet;
+74:	int CounterWord;
+75:	unsigned short CrcValue=0xFFFF;
+76:	for (CounterWord = 0;
+77:	for (CounterWord = 0; CounterWord < Size;
+78:		CrcValue = (CrcValue << 8) ^ crc_LookUpTable[ (((BYTE)(CrcValue >> 8)) ^ *ptrData) ];
+79:		ptrData++;
+80:	return (CrcValue);
+81:	double dDist;
+82:	double dAngle, dAngleStep;
+83:	double dIntens;
+84:	dAngleStep = fabs(m_Param.dStopAngle - m_Param.dStartAngle) / double(m_Param.iNumScanPoints - 1) ;
+85:	for(int i=0;
+86:	for(int i=0; i<m_Param.iNumScanPoints;
+87:		dDist = double ((viScanRaw[i] & 0x1FFF) * m_Param.dScale);
+88:		dAngle = m_Param.dStartAngle + i*dAngleStep;
+89:		dIntens = double(viScanRaw[i] & 0x2000);
+90:		vecScanPolar[i].dr = dDist;
+91:		vecScanPolar[i].da = dAngle;
+92:		vecScanPolar[i].di = dIntens;
+93:	};
+94:	};
+95:	const int iBaudsLen = sizeof(baudTable) / sizeof(int);
+96:	bool ret = false;
+97:	*iBaudrateCode = B38400;
+98:	int i;
+99:	for( i=0;
+100:	for( i=0; i<iBaudsLen;
+101:			*iBaudrateCode = baudCodes[i];
+102:			ret = true;
+103:			break;
+104:	return ret;
+105:	m_BytePeriod.tv_sec = 0;
+106:	m_BytePeriod.tv_usec = 0;
+107:	close();
+108:	int Res;
+109:	m_Device = ::open(m_DeviceName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+110:			<< strerror(errno) << " (Error code " << errno << ")" << std::endl;
+111:		return -1;
+112:	Res = tcgetattr(m_Device, &m_tio);
+113:			<< strerror(errno) << " (Error code " << errno << ")" << std::endl;
+114:		::close(m_Device);
+115:		m_Device = -1;
+116:		return -1;
+117:	m_tio.c_iflag = 0;
+118:	m_tio.c_oflag = 0;
+119:	m_tio.c_cflag = B9600 | CS8 | CREAD | HUPCL | CLOCAL;
+120:	m_tio.c_lflag = 0;
+121:	cfsetispeed(&m_tio, B9600);
+122:	cfsetospeed(&m_tio, B9600);
+123:	m_tio.c_cc[VINTR] = 3;
+124:	m_tio.c_cc[VQUIT] = 28;
+125:	m_tio.c_cc[VERASE] = 127;
+126:	m_tio.c_cc[VKILL] = 21;
+127:	m_tio.c_cc[VEOF] = 4;
+128:	m_tio.c_cc[VTIME] = 0;
+129:	m_tio.c_cc[VMIN] = 1;
+130:	m_tio.c_cc[VSWTC] = 0;
+131:	m_tio.c_cc[VSTART] = 17;
+132:	m_tio.c_cc[VSTOP] = 19;
+133:	m_tio.c_cc[VSUSP] = 26;
+134:	m_tio.c_cc[VEOL] = 0;
+135:	m_tio.c_cc[VREPRINT] = 18;
+136:	m_tio.c_cc[VDISCARD] = 15;
+137:	m_tio.c_cc[VWERASE] = 23;
+138:	m_tio.c_cc[VLNEXT] = 22;
+139:	m_tio.c_cc[VEOL2] = 0;
+140:	int iNewBaudrate = int(m_BaudRate * m_Multiplier + 0.5);
+141:	std::cout << "Setting Baudrate to " << iNewBaudrate << std::endl;
+142:	int iBaudrateCode = 0;
+143:	bool bBaudrateValid = getBaudrateCode(iNewBaudrate, &iBaudrateCode);
+144:	cfsetispeed(&m_tio, iBaudrateCode);
+145:	cfsetospeed(&m_tio, iBaudrateCode);
+146:		std::cout << "Baudrate code not available - setting baudrate directly" << std::endl;
+147:		struct serial_struct ss;
+148:		ioctl( m_Device, TIOCGSERIAL, &ss );
+149:		ss.flags |= ASYNC_SPD_CUST;
+150:		ss.custom_divisor = ss.baud_base / iNewBaudrate;
+151:		ioctl( m_Device, TIOCSSERIAL, &ss );
+152:	m_tio.c_cflag &= ~CSIZE;
+153:			m_tio.c_cflag |= CS5;
+154:			break;
+155:			m_tio.c_cflag |= CS6;
+156:			break;
+157:			m_tio.c_cflag |= CS7;
+158:			break;
+159:			m_tio.c_cflag |= CS8;
+160:	m_tio.c_cflag &= ~ (PARENB | PARODD);
+161:			m_tio.c_cflag |= PARODD;
+162:			m_tio.c_cflag |= PARENB;
+163:			break;
+164:			m_tio.c_cflag |= CSTOPB;
+165:			break;
+166:			m_tio.c_cflag &= ~CSTOPB;
+167:			m_tio.c_cflag &= ~CRTSCTS;
+168:			m_tio.c_iflag &= ~(IXON | IXOFF | IXANY);
+169:			break;
+170:			m_tio.c_cflag |= CRTSCTS;
+171:			m_tio.c_iflag &= ~(IXON | IXOFF | IXANY);
+172:			break;
+173:			m_tio.c_cflag &= ~CRTSCTS;
+174:			m_tio.c_iflag |= (IXON | IXOFF | IXANY);
+175:			break;
+176:	m_tio.c_oflag &= ~OPOST;
+177:	m_tio.c_lflag &= ~ICANON;
+178:	Res = tcsetattr(m_Device, TCSANOW, &m_tio);
+179:			<< strerror(errno) << " (Error code " << errno << ")" << std::endl;
+180:		::close(m_Device);
+181:		m_Device = -1;
+182:		return -1;
+183:	setTimeout(m_Timeout);
+184:	return 0;
+185:		::close(m_Device);
+186:		m_Device = -1;
+187:	m_Timeout = Timeout;
+188:		m_tio.c_cc[VTIME] = cc_t(ceil(m_Timeout * 10.0));
+189:		::tcsetattr(m_Device, TCSANOW, &m_tio);
+190:	m_ShortBytePeriod = false;
+191:	m_BytePeriod.tv_sec = time_t(Period);
+192:	m_BytePeriod.tv_usec = suseconds_t((Period - m_BytePeriod.tv_sec) * 1000);
+193:	ssize_t BytesRead;
+194:	BytesRead = ::read(m_Device, Buffer, Length);
+195:	printf("%2d Bytes read:", BytesRead);
+196:	for(int i=0;
+197:	for(int i=0; i<BytesRead;
+198:		printf(" %.2x", (unsigned char)Buffer[i]);
+199:	printf("\n");
+200:	return BytesRead;
+201:	int iAvaibleBytes = getSizeRXQueue();
+202:	int iBytesToRead = (Length < iAvaibleBytes) ? Length : iAvaibleBytes;
+203:	ssize_t BytesRead;
+204:	BytesRead = ::read(m_Device, Buffer, iBytesToRead);
+205:	return BytesRead;
+206:	ssize_t BytesWritten;
+207:		int i;
+208:		for (i = 0;
+209:		for (i = 0; i < Length;
+210:			BytesWritten = ::write(m_Device, Buffer + i, 1);
+211:				break;
+212:			::select(0, 0, 0, 0, &m_BytePeriod);
+213:		BytesWritten = i;
+214:		BytesWritten = ::write(m_Device, Buffer, Length);
+215:	printf("%2d Bytes sent:", BytesWritten);
+216:	for(int i=0;
+217:	for(int i=0; i<BytesWritten;
+218:		printf(" %.2x", (unsigned char)Buffer[i]);
+219:	printf("\n");
+220:	return BytesWritten;
+221:	int cbInQue;
+222:	int Res = ioctl(m_Device, FIONREAD, &cbInQue);
+223:		return 0;
+224:	return cbInQue;
+225:	std::vector<std::vector<double> > scan_intervals;
+226:<font color="#FF0000">	ros::NodeHandle nh;</font>{}
+227:<font color="#FF0000">	ros::Subscriber topicSub_laser_scan_raw;</font>{}
+228:<font color="#FF0000">	ros::Publisher topicPub_laser_scan;</font>{}
+229:		scan_intervals = loadScanRanges();
+230:<font color="#FF0000">		topicPub_laser_scan = nh.advertise<sensor_msgs::LaserScan>("scan_filtered", 1);</font>{'type': 'sensor_msgs::LaserScan', 'name': 'scan_filtered'}
+231:<font color="#FF0000">		topicSub_laser_scan_raw = nh.subscribe("scan", 1, &NodeClass::scanCallback, this);</font>{}
+232:<font color="#FF0000">			topicPub_laser_scan.publish(*msg);</font>{}
+233:			return;
+234:		sensor_msgs::LaserScan laser_scan = * msg;
+235:		int start_scan, stop_scan, num_scans;
+236:		num_scans = laser_scan.ranges.size();
+237:		stop_scan = 0;
+238:		for ( unsigned int i=0;
+239:		for ( unsigned int i=0; i<scan_intervals.size();
+240:			std::vector<double> * it = & scan_intervals.at(i);
+241:				ROS_WARN("Found an interval that lies below min scan range, skip!");
+242:				continue;
+243:				ROS_WARN("Found an interval that lies beyond max scan range, skip!");
+244:				continue;
+245:			if( it->at(0) <= laser_scan.angle_min ) start_scan = 0;
+246:				start_scan = (int)( (it->at(0) - laser_scan.angle_min) / laser_scan.angle_increment);
+247:			for(int u = stop_scan;
+248:			for(int u = stop_scan; u<start_scan;
+249:				laser_scan.ranges.at(u) = 0.0;
+250:			if( it->at(1) >= laser_scan.angle_max ) stop_scan = num_scans-1;
+251:				stop_scan = (int)( (it->at(1) - laser_scan.angle_min) / laser_scan.angle_increment);
+252:		for(unsigned int u = stop_scan;
+253:		for(unsigned int u = stop_scan; u<laser_scan.ranges.size();
+254:			laser_scan.ranges.at(u) = 0.0;
+255:<font color="#FF0000">		topicPub_laser_scan.publish(laser_scan);</font>{}
+256:	std::vector<std::vector<double> > loadScanRanges();
+257:};
+258:<font color="#FF0000">	ros::init(argc, argv, "scanner_filter");</font>{}
+259:	NodeClass nc;
+260:<font color="#FF0000">	ros::spin();</font>{}
+261:	return 0;
+262:	return a.at(0) < b.at(0);
+263:	std::string scan_intervals_param = "scan_intervals";
+264:	std::vector<std::vector<double> > vd_interval_set;
+265:	std::vector<double> vd_interval;
+266:	XmlRpc::XmlRpcValue intervals_list;
+267:		nh.getParam(scan_intervals_param, intervals_list);
+268:			ROS_FATAL("The scan intervals must be specified as a list of lists [[x1, y1], [x2, y2], ..., [xn, yn]]");
+269:			throw std::runtime_error("The scan intervals must be specified as a list of lists [[x1, y1], [x2, y2], ..., [xn, yn]]");
+270:		for(int i = 0;
+271:		for(int i = 0; i < intervals_list.size();
+272:			vd_interval.clear();
+273:			XmlRpc::XmlRpcValue interval = intervals_list[i];
+274:				ROS_FATAL("The scan intervals must be specified as a list of lists [[x1, y1], [x2, y2], ..., [xn, yn]]");
+275:				throw std::runtime_error("The scan intervals must be specified as a list of lists [[x1, y1], [x2, y2], ..., [xn, yn]]");
+276:				ROS_FATAL("Values in the scan intervals specification must be numbers");
+277:				throw std::runtime_error("Values in the scan intervals specification must be numbers");
+278:			vd_interval.push_back( interval[0].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(interval[0]) : (double)(interval[0]) );
+279:				ROS_FATAL("Values in the scan intervals specification must be numbers");
+280:				throw std::runtime_error("Values in the scan intervals specification must be numbers");
+281:			vd_interval.push_back( interval[1].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(interval[1]) : (double)(interval[1]) );
+282:				ROS_WARN("Found a scan interval < -PI, skip!");
+283:				continue;
+284:				ROS_WARN("Found a scan interval > PI, skip!");
+285:				continue;
+286:				ROS_WARN("Found a scan interval with i1 > i2, switched order!");
+287:				vd_interval[1] = vd_interval[0];
+288:				vd_interval[0] = ( interval[1].getType() == XmlRpc::XmlRpcValue::TypeInt ? (int)(interval[1]) : (double)(interval[1]) );
+289:			vd_interval_set.push_back(vd_interval);
+290:	} else ROS_WARN("Scan filter has not found any scan interval parameters.");
+291:	sort(vd_interval_set.begin(), vd_interval_set.end(), compareIntervals);
+292:	for(unsigned int i = 0;
+293:	for(unsigned int i = 0; i<vd_interval_set.size();
+294:		for(unsigned int u = i+1;
+295:		for(unsigned int u = i+1; u<vd_interval_set.size();
+296:				ROS_FATAL("The scan intervals you specified are overlapping!");
+297:				throw std::runtime_error("The scan intervals you specified are overlapping!");
+298:	return vd_interval_set;
+299:<font color="#FF0000">		ros::NodeHandle nh;</font>{}
+300:<font color="#FF0000">		ros::Publisher topicPub_LaserScan;</font>{}
+301:<font color="#FF0000">        ros::Publisher topicPub_Diagnostic_;</font>{}
+302:		std::string port;
+303:		int baud, scan_id;
+304:		bool inverted;
+305:		double scan_duration, scan_cycle_time;
+306:		std::string frame_id;
+307:		ros::Time syncedROSTime;
+308:		unsigned int syncedSICKStamp;
+309:		bool syncedTimeReady;
+310:<font color="#FF0000">			nh = ros::NodeHandle("~");</font>{}
+311:<font color="#00FF00">			if(!nh.hasParam("port")) ROS_WARN("Used default parameter for port");</font>{}
+312:<font color="#00FF00">			nh.param("port", port, std::string("/dev/ttyUSB0"));</font>{}
+313:<font color="#00FF00">			if(!nh.hasParam("baud")) ROS_WARN("Used default parameter for baud");</font>{}
+314:<font color="#00FF00">			nh.param("baud", baud, 500000);</font>{}
+315:<font color="#00FF00">			if(!nh.hasParam("scan_id")) ROS_WARN("Used default parameter for scan_id");</font>{}
+316:<font color="#00FF00">			nh.param("scan_id", scan_id, 7);</font>{}
+317:<font color="#00FF00">			if(!nh.hasParam("inverted")) ROS_WARN("Used default parameter for inverted");</font>{}
+318:<font color="#00FF00">			nh.param("inverted", inverted, false);</font>{}
+319:<font color="#00FF00">			if(!nh.hasParam("frame_id")) ROS_WARN("Used default parameter for frame_id");</font>{}
+320:<font color="#00FF00">			nh.param("frame_id", frame_id, std::string("/base_laser_link"));</font>{}
+321:<font color="#00FF00">			if(!nh.hasParam("scan_duration")) ROS_WARN("Used default parameter for scan_duration");</font>{}
+322:<font color="#00FF00">			nh.param("scan_duration", scan_duration, 0.025);</font>{}
+323:<font color="#00FF00">			if(!nh.hasParam("scan_cycle_time")) ROS_WARN("Used default parameter for scan_cycle_time");</font>{}
+324:<font color="#00FF00">			nh.param("scan_cycle_time", scan_cycle_time, 0.040);</font>{}
+325:			syncedSICKStamp = 0;
+326:			syncedROSTime = ros::Time::now();
+327:			syncedTimeReady = false;
+328:<font color="#FF0000">			topicPub_LaserScan = nh.advertise<sensor_msgs::LaserScan>("scan", 1);</font>{'type': 'sensor_msgs::LaserScan', 'name': 'scan'}
+329:<font color="#FF0000">			topicPub_Diagnostic_ = nh.advertise<diagnostic_msgs::DiagnosticArray>("/diagnostics", 1);</font>{'type': 'diagnostic_msgs::DiagnosticArray', 'name': '/diagnostics'}
+330:			int start_scan, stop_scan;
+331:			int num_readings = vdDistM.size();
+332:	  		start_scan = 0;
+333:			stop_scan = vdDistM.size();
+334:				syncedROSTime = ros::Time::now() - ros::Duration(scan_cycle_time);
+335:				syncedSICKStamp = iSickNow;
+336:				syncedTimeReady = true;
+337:				ROS_DEBUG("Got iSickNow, store sync-stamp: %d", syncedSICKStamp);
+338:			sensor_msgs::LaserScan laserScan;
+339:				double timeDiff = (int)(iSickTimeStamp - syncedSICKStamp) * scan_cycle_time;
+340:				laserScan.header.stamp = syncedROSTime + ros::Duration(timeDiff);
+341:				ROS_DEBUG("Time::now() - calculated sick time stamp = %f",(ros::Time::now() - laserScan.header.stamp).toSec());
+342:				laserScan.header.stamp = ros::Time::now();
+343:			laserScan.header.frame_id = frame_id;
+344:			laserScan.angle_increment = vdAngRAD[start_scan + 1] - vdAngRAD[start_scan];
+345:			laserScan.range_min = 0.001;
+346:			laserScan.range_max = 30.0;
+347:			laserScan.time_increment = (scan_duration) / (vdDistM.size());
+348:			num_readings = vdDistM.size();
+349:			laserScan.angle_min = vdAngRAD[start_scan];
+350:			laserScan.angle_max = vdAngRAD[stop_scan - 1];
+351:   			laserScan.ranges.resize(num_readings);
+352:			laserScan.intensities.resize(num_readings);
+353:				laserScan.time_increment = - laserScan.time_increment;
+354:				laserScan.header.stamp = laserScan.header.stamp - ros::Duration(scan_duration);
+355:			for(int i = 0;
+356:			for(int i = 0; i < (stop_scan - start_scan);
+357:					laserScan.ranges[i] = vdDistM[stop_scan-1-i];
+358:					laserScan.intensities[i] = vdIntensAU[stop_scan-1-i];
+359:					laserScan.ranges[i] = vdDistM[start_scan + i];
+360:					laserScan.intensities[i] = vdIntensAU[start_scan + i];
+361:<font color="#FF0000">			topicPub_LaserScan.publish(laserScan);</font>{}
+362:			diagnostic_msgs::DiagnosticArray diagnostics;
+363:			diagnostics.status.resize(1);
+364:			diagnostics.status[0].level = 0;
+365:			diagnostics.status[0].name = nh.getNamespace();
+366:			diagnostics.status[0].message = "sick scanner running";
+367:<font color="#FF0000">			topicPub_Diagnostic_.publish(diagnostics);</font>{}
+368:			diagnostic_msgs::DiagnosticArray diagnostics;
+369:			diagnostics.status.resize(1);
+370:			diagnostics.status[0].level = 2;
+371:			diagnostics.status[0].name = nh.getNamespace();
+372:			diagnostics.status[0].message = error_str;
+373:<font color="#FF0000">			topicPub_Diagnostic_.publish(diagnostics);</font>{}
+374:};
+375:<font color="#FF0000">	ros::init(argc, argv, "sick_s300");</font>{}
+376:	NodeClass nodeClass;
+377:	ScannerSickS300 SickS300;
+378:	int iBaudRate = nodeClass.baud;
+379:	int iScanId = nodeClass.scan_id;
+380:	bool bOpenScan = false, bRecScan = false;
+381:	bool firstTry = true;
+382:	unsigned int iSickTimeStamp, iSickNow;
+383:	std::vector<double> vdDistM, vdAngRAD, vdIntensAU;
+384: 		ROS_INFO("Opening scanner... (port:%s)",nodeClass.port.c_str());
+385:		bOpenScan = SickS300.open(nodeClass.port.c_str(), iBaudRate, iScanId);
+386:			ROS_ERROR("...scanner not available on port %s. Will retry every second.",nodeClass.port.c_str());
+387:			nodeClass.publishError("...scanner not available on port");
+388:			firstTry = false;
+389:		sleep(1);
+390:	ROS_INFO("...scanner opened successfully on port %s",nodeClass.port.c_str());
+391:	ros::Rate loop_rate(5);
+392:		ROS_DEBUG("Reading scanner...");
+393:		bRecScan = SickS300.getScan(vdDistM, vdAngRAD, vdIntensAU, iSickTimeStamp, iSickNow);
+394:		ROS_DEBUG("...read %d points from scanner successfully",(int)vdDistM.size());
+395:			ROS_DEBUG("...publishing LaserScan message");
+396:			nodeClass.publishLaserScan(vdDistM, vdAngRAD, vdIntensAU, iSickTimeStamp, iSickNow);
+397:			ROS_WARN("...no Scan available");
+398:		ros::spinOnce();
+399:		loop_rate.sleep();
+400:	return 0;
+401:<font color="#FF0000">		ros::NodeHandle nodeHandle;</font>{}
+402:    	message_filters::Subscriber<sensor_msgs::LaserScan> * topicSub_LaserFront;
+403:		message_filters::Subscriber<sensor_msgs::LaserScan> * topicSub_LaserBack;
+404:        message_filters::TimeSynchronizer<sensor_msgs::LaserScan, sensor_msgs::LaserScan> *sync;
+405:		tf::TransformListener listener_;
+406:		laser_geometry::LaserProjection projector_;
+407:<font color="#FF0000">		ros::Publisher topicPub_LaserUnified;</font>{}
+408:		tf::StampedTransform transform_scan_front;
+409:	    tf::StampedTransform transform_scan_back;
+410:<font color="#FF0000">      topicPub_LaserUnified = nodeHandle.advertise<sensor_msgs::LaserScan>("scan_unified", 1);</font>{'type': 'sensor_msgs::LaserScan', 'name': 'scan_unified'}
+411:      topicSub_LaserFront = new message_filters::Subscriber<sensor_msgs::LaserScan>(nodeHandle, "/scan_front", 1);
+412:	  topicSub_LaserBack = new message_filters::Subscriber<sensor_msgs::LaserScan>(nodeHandle, "/scan_rear", 1);
+413:	  sync = new message_filters::TimeSynchronizer<sensor_msgs::LaserScan, sensor_msgs::LaserScan>(*topicSub_LaserFront, *topicSub_LaserBack, 10);
+414:	  sync->registerCallback(boost::bind(&NodeClass::scanCallback, this, _1, _2));
+415:	  sensor_msgs::LaserScan laserUnified;
+416:	  sensor_msgs::PointCloud cloud_front;
+417:	  listener_.waitForTransform("/base_link", scan_front->header.frame_id, scan_front->header.stamp, ros::Duration(15.0));
+418:	  projector_.transformLaserScanToPointCloud("/base_link",*scan_front, cloud_front, listener_);
+419:	  sensor_msgs::PointCloud cloud_rear;
+420:	  listener_.waitForTransform("/base_link", scan_rear->header.frame_id, scan_rear->header.stamp, ros::Duration(15.0));
+421:	  projector_.transformLaserScanToPointCloud("/base_link",*scan_rear, cloud_rear, listener_);
+422:	  laserUnified.header = scan_front->header;
+423:      laserUnified.header.frame_id = "base_link";
+424:	  laserUnified.angle_min = -M_PI+0.1;
+425:	  laserUnified.angle_max = M_PI-0.1;
+426:	  laserUnified.angle_increment = M_PI/180.0/2.0;
+427:	  laserUnified.time_increment = 0.0;
+428:	  laserUnified.scan_time = scan_front->scan_time;
+429:	  laserUnified.range_min = scan_front->range_min;
+430:	  laserUnified.range_max = scan_front->range_max;
+431:	  laserUnified.ranges.resize((laserUnified.angle_max - laserUnified.angle_min) / laserUnified.angle_increment);
+432:	  for (unsigned int i = 0;
+433:	  for (unsigned int i = 0; i < cloud_front.points.size();
+434:      	const float &x = cloud_front.points[i].x;
+435:      	const float &y = cloud_front.points[i].y;
+436:      	const float &z = cloud_front.points[i].z;
+437:			ROS_DEBUG("rejected for nan in point(%f, %f, %f)\n", x, y, z);
+438:        	continue;
+439:		double angle = atan2(y, x);
+440:        	ROS_DEBUG("rejected for angle %f not in range (%f, %f)\n", angle, laserUnified.angle_min, laserUnified.angle_max);
+441:        	continue;
+442:		int index = (angle - laserUnified.angle_min) / laserUnified.angle_increment;
+443:		double range_sq = y*y+x*x;
+444:        laserUnified.ranges[index] = sqrt(range_sq);
+445:	  for (unsigned int i = 0;
+446:	  for (unsigned int i = 0; i < cloud_rear.points.size();
+447:      	const float &x = cloud_rear.points[i].x;
+448:      	const float &y = cloud_rear.points[i].y;
+449:      	const float &z = cloud_rear.points[i].z;
+450:			ROS_DEBUG("rejected for nan in point(%f, %f, %f)\n", x, y, z);
+451:        	continue;
+452:		double angle = atan2(y, x);
+453:        	ROS_DEBUG("rejected for angle %f not in range (%f, %f)\n", angle, laserUnified.angle_min, laserUnified.angle_max);
+454:        	continue;
+455:		int index = (angle - laserUnified.angle_min) / laserUnified.angle_increment;
+456:		double range_sq = y*y+x*x;
+457:        laserUnified.ranges[index] = sqrt(range_sq);
+458:<font color="#FF0000">	  topicPub_LaserUnified.publish(laserUnified);</font>{}
+459:};
+460:<font color="#FF0000">  ros::init(argc, argv, "scanner_unifier");</font>{}
+461:  NodeClass nc;
+462:<font color="#FF0000">  ros::spin();</font>{}
+463:  return 0;
+</pre>
+</body>
+</html>

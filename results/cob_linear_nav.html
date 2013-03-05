@@ -1,0 +1,236 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+1:<font color="#FF0000">	ros::NodeHandle nh_;</font>{}
+2:<font color="#FF0000">	ros::Publisher topic_pub_command_;</font>{}
+3:<font color="#FF0000">	ros::Subscriber goal_sub_, odometry_sub_;</font>{}
+4:	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> as_;
+5:	move_base_msgs::MoveBaseResult result_;
+6:	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> * action_client_;
+7:		m_mutex = PTHREAD_MUTEX_INITIALIZER;
+8:<font color="#FF0000">    ros::NodeHandle private_nh("~");</font>{}
+9:<font color="#FF0000">		topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);</font>{'type': 'geometry_msgs::Twist', 'name': 'cmd_vel'}
+10:<font color="#FF0000">		ros::NodeHandle simple_nh("move_base_linear_simple");</font>{}
+11:<font color="#FF0000">		goal_sub_ = simple_nh.subscribe<geometry_msgs::PoseStamped>("goal", 1, boost::bind(&NodeClass::topicCB, this, _1));</font>{'type': 'geometry_msgs::PoseStamped', 'name': 'goal'}
+12:		action_client_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>(nh_, name);
+13:<font color="#FF0000">		odometry_sub_ = nh_.subscribe<nav_msgs::Odometry>("odom", 1, boost::bind(&NodeClass::odometryCB, this, _1));</font>{'type': 'nav_msgs::Odometry', 'name': 'odom'}
+14:<font color="#00FF00">		if(!private_nh.hasParam("kv")) ROS_WARN("Used default parameter for kv [2.5]");</font>{}
+15:<font color="#00FF00">		private_nh.param("kv", kv_, 2.5);</font>{}
+16:<font color="#00FF00">		if(!private_nh.hasParam("kp")) ROS_WARN("Used default parameter for kp [3.0]");</font>{}
+17:<font color="#00FF00">		private_nh.param("kp", kp_, 3.0);</font>{}
+18:<font color="#00FF00">    if(!private_nh.hasParam("virt_mass")) ROS_WARN("Used default parameter for virt_mass [0.5]");</font>{}
+19:<font color="#00FF00">		private_nh.param("virt_mass", virt_mass_, 0.5);</font>{}
+20:<font color="#00FF00">    if(!private_nh.hasParam("vmax")) ROS_WARN("Used default parameter for vmax [0.3 m/s]");</font>{}
+21:<font color="#00FF00">		private_nh.param("vmax", v_max_, 0.3);</font>{}
+22:<font color="#00FF00">		if(!private_nh.hasParam("goal_threshold")) ROS_WARN("Used default parameter for goal_threshold [0.03 cm]");</font>{}
+23:<font color="#00FF00">		private_nh.param("goal_threshold", goal_threshold_, 0.03);</font>{}
+24:<font color="#00FF00"> 		if(!private_nh.hasParam("speed_threshold")) ROS_WARN("Used default parameter for speed_threshold [0.08 m/s]");</font>{}
+25:<font color="#00FF00">		private_nh.param("speed_threshold", speed_threshold_, 0.08);</font>{}
+26:<font color="#00FF00">		if(!private_nh.hasParam("kv_rot")) ROS_WARN("Used default parameter for kv_rot [2.0]");</font>{}
+27:<font color="#00FF00">		private_nh.param("kv_rot", kv_rot_, 2.0);</font>{}
+28:<font color="#00FF00">		if(!private_nh.hasParam("kp_rot")) ROS_WARN("Used default parameter for kp_rot [2.0]");</font>{}
+29:<font color="#00FF00">		private_nh.param("kp_rot", kp_rot_, 2.0);</font>{}
+30:<font color="#00FF00">    if(!private_nh.hasParam("virt_mass_rot")) ROS_WARN("Used default parameter for virt_mass_rot [0.5]");</font>{}
+31:<font color="#00FF00">		private_nh.param("virt_mass_rot", virt_mass_rot_, 0.5);</font>{}
+32:<font color="#00FF00">		if(!private_nh.hasParam("vtheta_max")) ROS_WARN("Used default parameter for vtheta_max [0.3 rad/s]");</font>{}
+33:<font color="#00FF00">		private_nh.param("vtheta_max", vtheta_max_, 0.3);</font>{}
+34:<font color="#00FF00">		if(!private_nh.hasParam("goal_threshold_rot")) ROS_WARN("Used default parameter for goal_threshold_rot [0.08 rad]");</font>{}
+35:<font color="#00FF00">		private_nh.param("goal_threshold_rot", goal_threshold_rot_, 0.08);</font>{}
+36:<font color="#00FF00">		if(!private_nh.hasParam("speed_threshold_rot")) ROS_WARN("Used default parameter for speed_threshold_rot [0.08 rad/s]");</font>{}
+37:<font color="#00FF00">		private_nh.param("speed_threshold_rot", speed_threshold_rot_, 0.08);</font>{}
+38:<font color="#00FF00">		if(!private_nh.hasParam("global_frame")) ROS_WARN("Used default parameter for global_frame [/map]");</font>{}
+39:<font color="#00FF00">		private_nh.param("global_frame", global_frame_, std::string("/map"));</font>{}
+40:<font color="#00FF00">		if(!private_nh.hasParam("robot_frame")) ROS_WARN("Used default parameter for robot_frame [/base_link]");</font>{}
+41:<font color="#00FF00">		private_nh.param("robot_frame", robot_frame_, std::string("/base_link"));</font>{}
+42:<font color="#00FF00">		if(!private_nh.hasParam("slow_down_distance")) ROS_WARN("Used default parameter for slow_down_distance [0.5m]");</font>{}
+43:<font color="#00FF00">		private_nh.param("slow_down_distance", slow_down_distance_, 0.5);</font>{}
+44:<font color="#00FF00">		if(!private_nh.hasParam("goal_abortion_time")) ROS_WARN("Used default parameter for goal_abortion_time [5.0s]");</font>{}
+45:<font color="#00FF00">		private_nh.param("goal_abortion_time", goal_abortion_time_, 5.0);</font>{}
+46:		zero_pose_.pose.position.x = 0.0;
+47:		zero_pose_.pose.position.y = 0.0;
+48:		zero_pose_.pose.position.z = 0.0;
+49:		zero_pose_.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
+50:		zero_pose_.header.frame_id = robot_frame_;
+51:		ros::Time last_error = ros::Time::now();
+52:		std::string tf_error;
+53:			ros::spinOnce();
+54:				robot_frame_.c_str(), global_frame_.c_str(), tf_error.c_str());
+55:				last_error = ros::Time::now();
+56:		as_.start();
+57:		ROS_INFO("In ROS goal callback, wrapping the PoseStamped in the action message and re-sending to the server.");
+58:		move_base_msgs::MoveBaseGoal action_goal;
+59:    action_goal.target_pose = transformGoalToMap(*goal);
+60:		action_client_->sendGoal(action_goal);
+61:		action_client_->stopTrackingGoal();
+62:		ROS_INFO("In idle mode, new goal accepted");
+63:    last_time_moving_ = ros::Time::now().toSec();
+64:    getRobotPoseGlobal();
+65:		x_last_ = robot_pose_global_.pose.position.x;
+66:		y_last_ = robot_pose_global_.pose.position.y;
+67:		theta_last_ = tf::getYaw(robot_pose_global_.pose.orientation);
+68:		vtheta_last_ = 0.0f;
+69:		vx_last_ = 0.0f;
+70:		vy_last_ = 0.0f;
+71:		last_time_ = ros::Time::now().toSec();
+72:		goal_pose_global_ = transformGoalToMap(goal->target_pose);
+73:		move_ = true;
+74:		ros::Rate loop_rate(100);
+75:			loop_rate.sleep();
+76:					ROS_INFO("New goal received, updating movement");
+77:					move_base_msgs::MoveBaseGoal new_goal = * as_.acceptNewGoal();
+78:					goal_pose_global_ = transformGoalToMap(new_goal.target_pose);
+79:          last_time_moving_ = ros::Time::now().toSec();
+80:					move_ = true;
+81:					ROS_INFO("Preempt requested, aborting movement");
+82:					as_.setPreempted();
+83:					move_ = false;
+84:					stopMovement();
+85:					return;
+86:			performControllerStep();
+87:				as_.setSucceeded(move_base_msgs::MoveBaseResult(), "Goal reached.");
+88:				ROS_INFO("Goal reached.");
+89:				return;
+90:        ROS_INFO("Goal not active anymore. Stop!");
+91:        return;
+92:		stopMovement();
+93:		as_.setAborted(move_base_msgs::MoveBaseResult(), "Aborting on the goal because the node has been killed");
+94:		return;
+95:	};
+96:		geometry_msgs::Vector3Stamped vec_stamped;
+97:		vec_stamped.vector = odometry->twist.twist.linear;
+98:		vec_stamped.header.frame_id =  "/base_footprint";
+99:		tf_listener_.transformVector(robot_frame_, vec_stamped, robot_twist_linear_robot_);
+100:		vec_stamped.vector = odometry->twist.twist.angular;
+101:		vec_stamped.header.frame_id =  "/base_footprint";
+102:		tf_listener_.transformVector(robot_frame_, vec_stamped, robot_twist_angular_robot_);
+103:	tf::TransformListener tf_listener_;
+104:	std::string global_frame_, robot_frame_;
+105:	geometry_msgs::PoseStamped goal_pose_global_;
+106:	geometry_msgs::PoseStamped zero_pose_;
+107:	geometry_msgs::PoseStamped robot_pose_global_;
+108:	geometry_msgs::Vector3Stamped robot_twist_linear_robot_, robot_twist_angular_robot_;
+109:  double slow_down_distance_, goal_abortion_time_;
+110:	bool finished_, move_;
+111:	pthread_mutex_t m_mutex;
+112:	void performControllerStep();
+113:	void publishVelocitiesGlobal(double vx, double vy, double theta);
+114:	geometry_msgs::PoseStamped transformGoalToMap(geometry_msgs::PoseStamped goal_pose);
+115:	geometry_msgs::PoseStamped getRobotPoseGlobal();
+116:	double getDistance2d(geometry_msgs::PoseStamped a, geometry_msgs::PoseStamped b);
+117:	double getDistance2d(geometry_msgs::Point a, geometry_msgs::Point b);
+118:	double getThetaDiffRad(double target, double actual);
+119:	double sign(double x);
+120:	void stopMovement();
+121:  bool notMovingDueToObstacle();
+122:	double vx_last_, vy_last_, x_last_, y_last_, theta_last_, vtheta_last_;
+123:	double goal_threshold_, speed_threshold_;
+124:	double goal_threshold_rot_, speed_threshold_rot_;
+125:	double kp_, kv_, virt_mass_;
+126:	double kp_rot_, kv_rot_, virt_mass_rot_;
+127:	double last_time_;
+128:	double v_max_, vtheta_max_;
+129:  double last_time_moving_;
+130:};
+131:	geometry_msgs::PoseStamped goal_global_;
+132:	if(goal_pose.header.frame_id == global_frame_) return goal_pose;
+133:		tf_listener_.transformPose(global_frame_, ros::Time(0), goal_pose, "/base_link", goal_global_);
+134:		return goal_global_;
+135:		ROS_WARN("Can't transform goal to global frame %s", global_frame_.c_str());
+136:		return robot_pose_global_;
+137:		tf_listener_.transformPose(global_frame_, zero_pose_, robot_pose_global_);
+138:		ROS_WARN("Failed to find robot pose in global frame %s", global_frame_.c_str());
+139:		return zero_pose_;
+140:	return robot_pose_global_;
+141:	return sqrt( pow(a.pose.position.x - b.pose.position.x,2) + pow(a.pose.position.y - b.pose.position.y,2) );
+142:	return sqrt( pow(a.x - b.x,2) + pow(a.y - b.y,2) );
+143:	if(x >= 0.0f) return 1.0f;
+144:	else return -1.0f;
+145:	if(fabs(target - actual) <= M_PI) return (target - actual);
+146:	else return sign(target - actual) * -2.0f * M_PI - (target - actual);
+147:	geometry_msgs::Vector3Stamped cmd_global, cmd_robot;
+148:	geometry_msgs::Twist msg;
+149:	cmd_global.header.frame_id = global_frame_;
+150:	cmd_global.vector.x = vx;
+151:	cmd_global.vector.y = vy;
+152:	try { tf_listener_.transformVector(robot_frame_, cmd_global, cmd_robot);
+153:		ROS_ERROR("%s",ex.what());
+154:		cmd_robot.vector.x = 0.0f;
+155:		cmd_robot.vector.y = 0.0f;
+156:	msg.linear = cmd_robot.vector;
+157:	msg.angular.z = theta;
+158:	msg.linear.z = 0.0;
+159:	msg.linear.z = 0.0; msg.angular.x = 0.0;
+160:	msg.linear.z = 0.0; msg.angular.x = 0.0; msg.angular.y = 0.0;
+161:<font color="#FF0000">	topic_pub_command_.publish(msg);</font>{}
+162:	publishVelocitiesGlobal(0.0f, 0.0f, 0.0f);
+163:	vx_last_ = 0.0f;
+164:	vy_last_ = 0.0f;
+165:	vtheta_last_ = 0.0f;
+166:    return true;
+167:    last_time_moving_ = ros::Time::now().toSec();
+168:  return false;
+169:	pthread_mutex_lock(&m_mutex);
+170:	double dt;
+171:	double F_x, F_y, F_theta;
+172:  double distance_to_goal;
+173:  double theta, theta_goal;
+174:	double cmd_vx, cmd_vy, cmd_vtheta;
+175:	double vx_d, vy_d, vtheta_d, v_factor;
+176:  double v_max_goal = v_max_;
+177:		pthread_mutex_unlock(&m_mutex);
+178:		return;
+179:	getRobotPoseGlobal();
+180:  distance_to_goal = getDistance2d(robot_pose_global_, goal_pose_global_);
+181:	theta = tf::getYaw(robot_pose_global_.pose.orientation);
+182:	theta_goal = tf::getYaw(goal_pose_global_.pose.orientation);
+183:		finished_ = true;
+184:		move_ = false;
+185:		stopMovement();
+186:		pthread_mutex_unlock(&m_mutex);
+187:		return;
+188:		finished_ = false;
+189:		move_ = false;
+190:		stopMovement();
+191:    as_.setAborted(move_base_msgs::MoveBaseResult(), "Cancel the goal because an obstacle is blocking the path.");
+192:    ROS_INFO("Cancel the goal because an obstacle is blocking the path.");
+193:		pthread_mutex_unlock(&m_mutex);
+194:		return;
+195:	} else finished_ = false;
+196:	dt = ros::Time::now().toSec() - last_time_;
+197:	last_time_ = ros::Time::now().toSec();
+198:		double goal_linear_slope = v_max_ / slow_down_distance_;
+199:		v_max_goal = distance_to_goal * goal_linear_slope;
+200:		if(v_max_goal > v_max_) v_max_goal = v_max_;
+201:			else if(v_max_goal < 0.0f) v_max_goal = 0.0f;
+202:	vx_d = kp_/kv_ * (goal_pose_global_.pose.position.x - robot_pose_global_.pose.position.x);
+203:	vy_d = kp_/kv_ * (goal_pose_global_.pose.position.y - robot_pose_global_.pose.position.y);
+204:	v_factor = v_max_goal / sqrt(vy_d*vy_d + vx_d*vx_d);
+205:	if(v_factor > 1.0) v_factor = 1.0;
+206:	F_x = - kv_ * vx_last_ + v_factor * kp_ * (goal_pose_global_.pose.position.x - robot_pose_global_.pose.position.x);
+207:	F_y = - kv_ * vy_last_ + v_factor * kp_ * (goal_pose_global_.pose.position.y - robot_pose_global_.pose.position.y);
+208:	cmd_vx = vx_last_ + F_x / virt_mass_ * dt;
+209:	cmd_vy = vy_last_ + F_y / virt_mass_ * dt;
+210:	vtheta_d = kp_rot_ / kv_rot_ * getThetaDiffRad(theta_goal, theta);
+211:	v_factor = fabs(vtheta_max_ / vtheta_d);
+212:	if(v_factor > 1.0) v_factor = 1.0;
+213:	F_theta = - kv_rot_ * vtheta_last_ + v_factor * kp_rot_ * getThetaDiffRad(theta_goal, theta);
+214:	cmd_vtheta = vtheta_last_ + F_theta / virt_mass_rot_ * dt;
+215:	x_last_ = robot_pose_global_.pose.position.x;
+216:	y_last_ = robot_pose_global_.pose.position.y;
+217:	theta_last_ = theta;
+218:	vx_last_ = cmd_vx;
+219:	vy_last_ = cmd_vy;
+220:	vtheta_last_ = cmd_vtheta;
+221:	publishVelocitiesGlobal(cmd_vx, cmd_vy, cmd_vtheta);
+222:	pthread_mutex_unlock(&m_mutex);
+223:<font color="#FF0000">	ros::init(argc, argv, "cob_linear");</font>{}
+224:	NodeClass nodeClass("move_base_linear");
+225:<font color="#FF0000"> 	ros::spin();</font>{}
+226:	return 0;
+</pre>
+</body>
+</html>

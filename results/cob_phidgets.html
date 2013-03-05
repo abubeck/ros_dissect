@@ -1,0 +1,98 @@
+<html>
+<body>
+    <table summary="code examples">
+ 
+        <tr>
+
+        <td><pre style="border: 1px solid #888;padding: 2px">
+1:<font color="#FF0000">	ros::NodeHandle n_;</font>{}
+2:<font color="#FF0000">	ros::Publisher pub_range_;</font>{}
+3:	int id_, filter_size_;
+4:	std::list<int> vals_;
+5:	std::string frame_id_;
+6:	char buffer[256];
+7:	sprintf(buffer,"range_%d",id);
+8:	pub_range_ = n_.advertise<sensor_msgs::Range>(buffer, 0);
+9:<font color="#FF0000">	pub_range_.publish((sensor_msgs::Range)*this);</font>{}
+10:	sensor_msgs::Range msg;
+11:	msg.header.stamp = ros::Time::now();
+12:	msg.header.frame_id = frame_id_;
+13:	msg.radiation_type = sensor_msgs::Range::INFRARED;
+14:	msg.min_range = 0.04;
+15:	msg.max_range = 0.3;
+16:	msg.field_of_view = 0;
+17:	int sum=0, num=0;
+18:	for(std::list<int>::const_iterator it=vals_.begin();
+19:	for(std::list<int>::const_iterator it=vals_.begin(); it!=vals_.end();
+20:		sum+=*it;
+21:		++num;
+22:	msg.range = 20.76/(sum/(double)num - 11.);
+23:	return msg;
+24:int getId() const {return id_;
+25:	if(vals_.size()<filter_size_) vals_.push_back(v);
+26:	else {vals_.push_back(v);
+27:	else {vals_.push_back(v); vals_.pop_front();
+28:};
+29:int i;
+30:bool bOccupied_;
+31:std::vector<Sensor> g_sensors;
+32:	int sernum, version;
+33:	const char *deviceptr, *label;
+34:	CPhidget_getDeviceType(phid, &deviceptr);
+35:	CPhidget_getSerialNumber(phid, &sernum);
+36:	CPhidget_getDeviceVersion(phid, &version);
+37:	CPhidget_getDeviceLabel(phid, &label);
+38:	ROS_INFO("%s", deviceptr);
+39:	ROS_INFO("Version: %8d SerialNumber: %10d", version, sernum);
+40:	ROS_INFO("Label: %s", label);
+41:	return;
+42:	return 0;
+43:	for(size_t i=0;
+44:	for(size_t i=0; i<g_sensors.size();
+45:		if(g_sensors[i].getId()==Index) g_sensors[i].update(Value);
+46:	return 0;
+47:<font color="#FF0000">	ros::init(argc, argv, "cob_phidgets");</font>{}
+48:<font color="#FF0000">	ros::NodeHandle nh_("~");</font>{}
+49:	XmlRpc::XmlRpcValue v;
+50:<font color="#00FF00">    nh_.param("sensors", v, v);</font>{}
+51:    for(int i =0;
+52:    for(int i =0; i < v.size();
+53:	ROS_ASSERT(v[i].size()>=2);
+54:	int id = v[i][0];
+55:	std::string fr_id = v[i][1];
+56:	int filter = v.size()>2?(int)v[i][2]:10;
+57:	g_sensors.push_back(Sensor(fr_id,id,filter));
+58:				ROS_ERROR("Parameter sensors not set, shutting down node...");
+59:				nh_.shutdown();
+60:				return false;
+61:	ros::Rate loop_rate(10);
+62:	int numInputs, numOutputs, numSensors;
+63:	int err;
+64:	CPhidgetInterfaceKitHandle IFK = 0;
+65:	CPhidget_enableLogging(PHIDGET_LOG_VERBOSE, NULL);
+66:	CPhidgetInterfaceKit_create(&IFK);
+67:	CPhidgetInterfaceKit_set_OnSensorChange_Handler(IFK, IFK_SensorChangeHandler, NULL);
+68:	CPhidget_set_OnAttach_Handler((CPhidgetHandle)IFK, IFK_AttachHandler, NULL);
+69:	CPhidget_open((CPhidgetHandle)IFK, -1);
+70:	ROS_INFO("waiting for phidgets attachement...");
+71:		const char *errStr;
+72:		CPhidget_getErrorDescription(err, &errStr);
+73:		ROS_ERROR("Error waiting for attachment: (%d): %s",err,errStr);
+74:		goto exit;
+75:	ROS_INFO("... attached");
+76:	display_generic_properties((CPhidgetHandle)IFK);
+77:	CPhidgetInterfaceKit_getOutputCount((CPhidgetInterfaceKitHandle)IFK, &numOutputs);
+78:	CPhidgetInterfaceKit_getInputCount((CPhidgetInterfaceKitHandle)IFK, &numInputs);
+79:	CPhidgetInterfaceKit_getSensorCount((CPhidgetInterfaceKitHandle)IFK, &numSensors);
+80:	ROS_INFO("Sensors:%d Inputs:%d Outputs:%d", numSensors, numInputs, numOutputs);
+81:		for(size_t i=0;
+82:		for(size_t i=0; i<g_sensors.size();
+83:<font color="#FF0000">		for(size_t i=0; i<g_sensors.size(); i++) g_sensors[i].publish();</font>{}
+84:		ros::spinOnce();
+85:		loop_rate.sleep();
+86:	CPhidget_close((CPhidgetHandle)IFK);
+87:	CPhidget_delete((CPhidgetHandle)IFK);
+88:  return 0;
+</pre>
+</body>
+</html>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
+	TUT: 	ros::init(argc, argv, "kuka_rsi");{}
+	</node>
+</ros:Package>
