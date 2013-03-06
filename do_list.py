@@ -1,4 +1,5 @@
 
+import matplotlib.pyplot as plt
 import shutil
 from code_analyse import *
 
@@ -8,6 +9,9 @@ if __name__ == "__main__":
 	w = RosWiki()
 	f = open('results/result.csv', 'w')
 	f.write( "package, lloc, roslloc, sep\n")
+	package_names = []
+	llocs = []
+	rosllocs = []
 	for package in packages:
 		print "======================="+ package +"======================================"
 		p = Parser(package)
@@ -18,6 +22,25 @@ if __name__ == "__main__":
 		shutil.copyfile("code_colored.html", "results/"+package+".html")
 		shutil.copyfile("generated.ros_package", "results/"+package+".ros_package")
 		f.write( package+", "+str(lloc)+", "+str(num_of_param + num_of_comm)+", " + str(sep) + "\n")
+		package_names.append(package)
+		llocs.append(lloc)
+		rosllocs.append(num_of_param + num_of_comm)
 		print "========================================================================"
 		print ""
 	f.close()
+	if(sys.argv[1] == "fig"):
+		print package_names
+		print llocs
+		print rosllocs
+		fig = plt.figure()
+		ax = fig.add_subplot(1,1,1)
+		x = range(len(package_names))
+		ax.bar(x, llocs,color='r', align='center')
+		ax.bar(x, rosllocs,color='y', align='center')
+		ax.set_xticks(x)
+		ax.set_xticks(x)
+		ax.set_xticklabels(package_names)
+		ax.set_title('Code amount, by package',fontstyle='italic')
+		plt.ylabel('Logical lines of code')
+		fig.autofmt_xdate()
+		plt.show()
