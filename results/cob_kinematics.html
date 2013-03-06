@@ -78,7 +78,7 @@
 71:<font color="#FF0000">         get_constraint_aware_ik_server = rh.advertiseService("get_constraint_aware_ik", &IKWrapperNode::getConstraintAwarePositionIK,this);</font>{}
 72:<font color="#FF0000">        get_fk_server = rh.advertiseService("get_fk", &IKWrapperNode::getPositionFK,this);</font>{}
 73:<font color="#FF0000">         get_ik_extended_server = rh.advertiseService("get_ik_extended", &IKWrapperNode::getPositionIKExtended,this);</font>{}
-74:         nh.shutdown();
+74:<font color="#FF0000">         nh.shutdown();</font>{}
 75:};
 76:<font color="#FF0000">    ros::init(argc,argv,"ik_wrapper_node");</font>{}
 77:    IKWrapperNode node;

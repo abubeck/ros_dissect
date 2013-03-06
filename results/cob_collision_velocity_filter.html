@@ -11,8 +11,8 @@
 4:<font color="#00FF00">  if(!nh_.hasParam("costmap_parameter_source")) ROS_WARN("Checking default source [/local_costmap_node/costmap] for costmap parameters");</font>{}
 5:<font color="#00FF00">  nh_.param("costmap_parameter_source",costmap_parameter_source, std::string("/local_costmap_node/costmap"));</font>{}
 6:<font color="#FF0000">  ros::NodeHandle local_costmap_nh_(costmap_parameter_source);</font>{}
-7:<font color="#FF0000">  topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("command", 1);</font>{'type': 'geometry_msgs::Twist', 'name': 'command'}
-8:<font color="#FF0000">  topic_pub_relevant_obstacles_ = nh_.advertise<nav_msgs::GridCells>("relevant_obstacles", 1);</font>{'type': 'nav_msgs::GridCells', 'name': 'relevant_obstacles'}
+7:<font color="#FF0000">  topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("command", 1);</font>{}
+8:<font color="#FF0000">  topic_pub_relevant_obstacles_ = nh_.advertise<nav_msgs::GridCells>("relevant_obstacles", 1);</font>{}
 9:<font color="#FF0000">  joystick_velocity_sub_ = nh_.subscribe<geometry_msgs::Twist>("teleop_twist", 1, boost::bind(&CollisionVelocityFilter::joystickVelocityCB, this, _1));</font>{'type': 'geometry_msgs::Twist', 'name': 'teleop_twist'}
 10:<font color="#FF0000">  obstacles_sub_ = nh_.subscribe<nav_msgs::GridCells>("obstacles", 1, boost::bind(&CollisionVelocityFilter::obstaclesCB, this, _1));</font>{'type': 'nav_msgs::GridCells', 'name': 'obstacles'}
 11:<font color="#FF0000">  srv_client_get_footprint_ = nh_.serviceClient<cob_footprint_observer::GetFootprint>("/get_footprint");</font>{}
@@ -244,7 +244,7 @@
 237:  XmlRpc::XmlRpcValue footprint_list;
 238:  std::string footprint_string;
 239:  std::vector<std::string> footstring_list;
-240:    node.getParam(footprint_param, footprint_list);
+240:<font color="#00FF00">    node.getParam(footprint_param, footprint_list);</font>{}
 241:      footprint_string = std::string(footprint_list);
 242:        return footprint;
 243:      boost::erase_all(footprint_string, " ");

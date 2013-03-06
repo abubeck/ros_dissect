@@ -53,26 +53,26 @@
 46:};
 47:  typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 48:  typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image,sensor_msgs::PointCloud2> MySyncPolicy;
-49:  typedef actionlib::SimpleActionServer<cob_object_detection_msgs::DetectObjectsAction> ActionServer;
-50:  message_filters::Subscriber<sensor_msgs::Image> visual_sub_ ;
-51:  message_filters::Subscriber<sensor_msgs::PointCloud2> point_cloud_sub_;
+49:<font color="#FF0000">  typedef actionlib::SimpleActionServer<cob_object_detection_msgs::DetectObjectsAction> ActionServer;</font>{}
+50:<font color="#FF0000">  message_filters::Subscriber<sensor_msgs::Image> visual_sub_ ;</font>{}
+51:<font color="#FF0000">  message_filters::Subscriber<sensor_msgs::PointCloud2> point_cloud_sub_;</font>{}
 52:  message_filters::Synchronizer<MySyncPolicy> *sync_;
-53:  ActionServer *as_;
+53:<font color="#FF0000">  ActionServer *as_;</font>{}
 54:  cob_object_detection_msgs::DetectObjectsResult result_;
 55:  boost::mutex mutex_;
 56:<font color="#FF0000">  ros::Subscriber img_sub_;</font>{}
 57:<font color="#FF0000">  ros::Publisher  detection_pub_;</font>{}
 58:<font color="#FF0000">  ros::Publisher test_pub_;</font>{}
-59:  tf::TransformBroadcaster br_;
+59:<font color="#FF0000">  tf::TransformBroadcaster br_;</font>{}
 60:  GeneralMarker *gm_;
 61:  typedef enum {MARKER_3D, MARKER_2D, MARKER_2D_CALIB} MARKER_TYPE;
 62:  MARKER_TYPE marker_type_;
 63:  double f_;
 64:  double marker_size_;
-65:    visual_sub_.subscribe();
-66:    point_cloud_sub_.subscribe();
-67:    visual_sub_.unsubscribe();
-68:    point_cloud_sub_.unsubscribe();
+65:<font color="#FF0000">    visual_sub_.subscribe();</font>{}
+66:<font color="#FF0000">    point_cloud_sub_.subscribe();</font>{}
+67:<font color="#FF0000">    visual_sub_.unsubscribe();</font>{}
+68:<font color="#FF0000">    point_cloud_sub_.unsubscribe();</font>{}
 69:    PointCloud tmp;
 70:    for(int x=0;
 71:    for(int x=0; x<w;
@@ -91,13 +91,13 @@
 84:        marker_type_ = MARKER_2D_CALIB;
 85:<font color="#00FF00">    n->getParam("marker_size",marker_size_);</font>{}
 86:<font color="#00FF00">    n->getParam("f",f_);</font>{}
-87:      visual_sub_.subscribe(*n,"/camera/rgb/image_color",2);
-88:      point_cloud_sub_.subscribe(*n,"/camera/depth/points",2);
+87:<font color="#FF0000">      visual_sub_.subscribe(*n,"/camera/rgb/image_color",2);</font>{}
+88:<font color="#FF0000">      point_cloud_sub_.subscribe(*n,"/camera/depth/points",2);</font>{}
 89:      sync_ = new message_filters::Synchronizer<MySyncPolicy>(MySyncPolicy(4), visual_sub_, point_cloud_sub_);
 90:      sync_->registerCallback(boost::bind(&Qr_Node::callback_synchronizer, this, _1, _2));
 91:<font color="#FF0000">      img_sub_ = n->subscribe("/camera/rgb/image_color", 2, &Qr_Node::callback_img, this);</font>{}
-92:    unsubscribe();
-93:    as_ = new ActionServer(*n, "object_detection", boost::bind(&Qr_Node::executeCB, this, _1), false);
+92:<font color="#FF0000">    unsubscribe();</font>{}
+93:<font color="#FF0000">    as_ = new ActionServer(*n, "object_detection", boost::bind(&Qr_Node::executeCB, this, _1), false);</font>{}
 94:    as_->start();
 95:<font color="#FF0000">    test_pub_ = n->advertise<std_msgs::String>("marker_callback",1);</font>{'type': 'std_msgs::String', 'name': 'marker_callback'}
 96:    std::string algo_;
@@ -112,7 +112,7 @@
 105:    ros::Rate r(10);
 106:    bool success = false;
 107:      return;
-108:    subscribe();
+108:<font color="#FF0000">    subscribe();</font>{}
 109:    ROS_INFO("Action called");
 110:    double time_start = ros::Time::now().toSec();
 111:    const double timeout = 20;
@@ -127,7 +127,7 @@
 120:        as_->setPreempted();
 121:        break;
 122:      r.sleep();
-123:    unsubscribe();
+123:<font color="#FF0000">    unsubscribe();</font>{}
 124:      as_->setSucceeded(result_);
 125:      mutex_.unlock();
 126:      as_->setAborted(result_);

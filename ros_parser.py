@@ -29,10 +29,42 @@ PATTERNS = [
 # C++
  ['name',       'ros::init\([^\)]*' + QSTRING + '\)',               ['name']],  
  ['spin',       'ros::spin\(\)',                                    []],
+ ['spin',       'ros::spinOnce',                                    []],
+ ['rosInitFallback',       'ros::init',                                    []],
+ ['rosshutdown',       '.shutdown\(',                                    []],
+
+
+ #Communication Topics
  ['publ',       'publish\(\s*',                                    []],  
- ['sub',        'subscribe' + GENERIC + '\(' + QSTRING,             ["type", "name"]], 
+ ['sub_val',        'subscribe' + GENERIC + '\(' + QSTRING,             ["type", "name"]], 
+ ['sub',        'subscribe\(',             []], 
  ['sub',        'subscribe\(' + QSTRING + '\s*',                            ["name"]], 
- ['pub',        'advertise' + GENERIC + '\s*\(' + QSTRING,             ['type', 'name']],
+ ['sub',        'message_filters::Subscriber',                            []],
+ ['sub',        'image_transport::Subscriber',                            []], 
+ ['pub',        'image_transport::Publisher',                            []],  
+ ['pub_val',        'advertise' + GENERIC + '\s*\(' + QSTRING,             ['type', 'name']],
+ ['srv',        'advertiseService\(' + QSTRING,                     ['name']], #C++ service *SHOULD SET TYPE
+ ['srv',        'serviceClient',                     []], 
+ ['srv',        '\.advertise',                     []], 
+ ['srv_called', 'advertiseService' + GENERIC + '\(' + QSTRING,      ['type', 'name']],
+ ['nodehandle',       'ros::NodeHandle',                        []],
+ ['subscriber_def',       'ros::Subscriber \s*',                        []],
+ ['publisher_def',       'ros::Publisher \s*',                        []],
+ ['serviceserver_def',       'ros::ServiceServer \s*',                        []],
+ ['serviceclient_def',       'ros::ServiceClient \s*',                        []],
+ ['tf_listener',       '\.waitForTransform\(\s*',                        []],
+ ['tf_listener',       '\.lookupTransform\(\s*',                        []],
+ ['tf_listener',       'TransformListener',                        []],
+ ['tf_broadcaster',       'TransformBroadcaster',                        []],
+ ['action_client_val',       'SimpleActionClient\('+GENERIC+","+QSTRING,                        ["name"]],
+ ['action_client',       'SimpleActionClient',                        []],
+ ['action_server',       'SimpleActionServer',                        []],
+ ['action_server_val',       'ActionServer\('+GENERIC+","+QSTRING,                        ["handle", "name"]],
+ ['action_server',       'ActionServer',                        []],
+ 
+
+
+#Configuration
  ['param_val',      'param()\(' + QSTRING + ', [^,]+, ([^\)]+)\)',      ['type', 'name', 'default']], 
  ['param_val',      'param' + GENERIC + '\(' + QSTRING + ', [^,]+' + FINAL_PARAM, ['type', 'name', 'default']],
  ['param',      'getParam\(' + QSTRING,                             ['name']], 
@@ -41,17 +73,10 @@ PATTERNS = [
  ['param',      'param\(' ,                           []], 
  ['param',  'setParam\(' + QSTRING,                             ['name']],
  ['param',  'setParam\(',                             []], 
+ ['param',  'getParam\(',                             []], 
  ['param',  'deleteParam\(',                             []], 
  ['param',  'searchParam\(',                             []], 
  ['param',  'param::set\(' + QSTRING,                           ['name']], 
- ['srv',        'advertiseService\(' + QSTRING,                     ['name']], #C++ service *SHOULD SET TYPE
- ['srv',        'serviceClient',                     []], 
- ['srv_called', 'advertiseService' + GENERIC + '\(' + QSTRING,      ['type', 'name']],
- ['nodehandle',       'ros::NodeHandle',                        []],
- ['subscriber_def',       'ros::Subscriber \s*',                        []],
- ['publisher_def',       'ros::Publisher \s*',                        []],
- ['serviceserver_def',       'ros::ServiceServer \s*',                        []],
- ['serviceclient_def',       'ros::ServiceClient \s*',                        []],
  
 
 # Python

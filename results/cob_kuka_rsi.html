@@ -24,11 +24,11 @@
 17:<font color="#00FF00">			n_.getParam("ip", ip_);</font>{}
 18:			ROS_INFO("RSI: ip is set to %s",ip_.c_str());
 19:			ROS_ERROR("Parameter ip not set, shutting down node...");
-20:			n_.shutdown();
+20:<font color="#FF0000">			n_.shutdown();</font>{}
 21:<font color="#00FF00">			n_.getParam("port", port_);</font>{}
 22:			ROS_INFO("RSI: port is set to %d",port_);
 23:			ROS_ERROR("Parameter port not set, shutting down node...");
-24:			n_.shutdown();
+24:<font color="#FF0000">			n_.shutdown();</font>{}
 25:		rsi_ctrl_ = new RSIConnector(ip_, port_, true);
 26:				"/joint_states", 1);
 27:				1);
@@ -42,7 +42,7 @@
 35:		XmlRpc::XmlRpcValue JointNamesXmlRpc;
 36:<font color="#00FF00">			n_.getParam("joint_names", JointNamesXmlRpc);</font>{}
 37:			ROS_ERROR("Parameter joint_names not set, shutting down node...");
-38:			n_.shutdown();
+38:<font color="#FF0000">			n_.shutdown();</font>{}
 39:		joint_names_.resize(JointNamesXmlRpc.size());
 40:		for (int i = 0;
 41:		for (int i = 0; i < JointNamesXmlRpc.size();
@@ -137,7 +137,7 @@
 130:		ROS_WARN("Parameter frequency not available, setting to default value: %f Hz", frequency);
 131:	ros::Rate loop_rate(frequency);
 132:		rsi_node.publishState();
-133:		ros::spinOnce();
+133:<font color="#FF0000">		ros::spinOnce();</font>{}
 134:		loop_rate.sleep();
 135:	return 0;
 136:	std::cout << "About to start... please press ENTER" << std::endl;

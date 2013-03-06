@@ -1104,8 +1104,8 @@
 1097:static const char WINDOW[] = "Image window";
 1098:<font color="#FF0000">  ros::NodeHandle nh_;</font>{}
 1099:  image_transport::ImageTransport it_;
-1100:  image_transport::Subscriber image_sub_;
-1101:  image_transport::Publisher image_pub_;
+1100:<font color="#FF0000">  image_transport::Subscriber image_sub_;</font>{}
+1101:<font color="#FF0000">  image_transport::Publisher image_pub_;</font>{}
 1102:<font color="#FF0000">  ros::Subscriber robot_state_sub_;</font>{}
 1103:<font color="#FF0000">  ros::Subscriber depth_sub_;</font>{}
 1104:  DetectText detector;
@@ -1118,7 +1118,7 @@
 1111:  float y_;
 1112:  bool okToDetect_;
 1113:  bool initialized_;
-1114:    image_pub_ = it_.advertise("text_detect", 1);
+1114:<font color="#FF0000">    image_pub_ = it_.advertise("text_detect", 1);</font>{}
 1115:<font color="#FF0000">    image_sub_ = it_.subscribe("image_color", 1, &TextReader::imageCb, this);</font>{}
 1116:<font color="#FF0000">    robot_state_sub_ = nh_.subscribe("/base_odometry/state", 1, &TextReader::robotStateCb, this);</font>{}
 1117:    detector = DetectText();
@@ -1155,14 +1155,14 @@
 1148:      ROS_INFO("start detection........");
 1149:      ros::Time now = ros::Time::now();
 1150:        ROS_INFO("waiting...");
-1151:        ros::spinOnce();
+1151:<font color="#FF0000">        ros::spinOnce();</font>{}
 1152:        r.sleep();
 1153:        continue;
 1154:      pthread_mutex_lock(&(reader.pr2_velocity_lock_));
 1155:      bool is_steady = (now - reader.last_movement_ > ros::Duration(2));
 1156:      bool is_moving = (reader.x_ != 0 || reader.y_ != 0);
 1157:      pthread_mutex_unlock(&(reader.pr2_velocity_lock_));
-1158:        ros::spinOnce();
+1158:<font color="#FF0000">        ros::spinOnce();</font>{}
 1159:        r.sleep();
 1160:        continue;
 1161:      pthread_mutex_lock(&(reader.pr2_image_lock_));
@@ -1177,7 +1177,7 @@
 1170:          << ",width=" << ((detector.getBoxesBothSides())[0]).width << endl;
 1171:    std::cout << "----------------------------------" << endl;
 1172:    last_detection = ros::Time::now();
-1173:    ros::spinOnce();
+1173:<font color="#FF0000">    ros::spinOnce();</font>{}
 1174:    r.sleep();
 1175:  return 0;
 </pre>

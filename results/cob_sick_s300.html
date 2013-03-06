@@ -234,7 +234,7 @@
 227:<font color="#FF0000">	ros::Subscriber topicSub_laser_scan_raw;</font>{}
 228:<font color="#FF0000">	ros::Publisher topicPub_laser_scan;</font>{}
 229:		scan_intervals = loadScanRanges();
-230:<font color="#FF0000">		topicPub_laser_scan = nh.advertise<sensor_msgs::LaserScan>("scan_filtered", 1);</font>{'type': 'sensor_msgs::LaserScan', 'name': 'scan_filtered'}
+230:<font color="#FF0000">		topicPub_laser_scan = nh.advertise<sensor_msgs::LaserScan>("scan_filtered", 1);</font>{}
 231:<font color="#FF0000">		topicSub_laser_scan_raw = nh.subscribe("scan", 1, &NodeClass::scanCallback, this);</font>{}
 232:<font color="#FF0000">			topicPub_laser_scan.publish(*msg);</font>{}
 233:			return;
@@ -271,7 +271,7 @@
 264:	std::vector<std::vector<double> > vd_interval_set;
 265:	std::vector<double> vd_interval;
 266:	XmlRpc::XmlRpcValue intervals_list;
-267:		nh.getParam(scan_intervals_param, intervals_list);
+267:<font color="#00FF00">		nh.getParam(scan_intervals_param, intervals_list);</font>{}
 268:			ROS_FATAL("The scan intervals must be specified as a list of lists [[x1, y1], [x2, y2], ..., [xn, yn]]");
 269:			throw std::runtime_error("The scan intervals must be specified as a list of lists [[x1, y1], [x2, y2], ..., [xn, yn]]");
 270:		for(int i = 0;
@@ -332,8 +332,8 @@
 325:			syncedSICKStamp = 0;
 326:			syncedROSTime = ros::Time::now();
 327:			syncedTimeReady = false;
-328:<font color="#FF0000">			topicPub_LaserScan = nh.advertise<sensor_msgs::LaserScan>("scan", 1);</font>{'type': 'sensor_msgs::LaserScan', 'name': 'scan'}
-329:<font color="#FF0000">			topicPub_Diagnostic_ = nh.advertise<diagnostic_msgs::DiagnosticArray>("/diagnostics", 1);</font>{'type': 'diagnostic_msgs::DiagnosticArray', 'name': '/diagnostics'}
+328:<font color="#FF0000">			topicPub_LaserScan = nh.advertise<sensor_msgs::LaserScan>("scan", 1);</font>{}
+329:<font color="#FF0000">			topicPub_Diagnostic_ = nh.advertise<diagnostic_msgs::DiagnosticArray>("/diagnostics", 1);</font>{}
 330:			int start_scan, stop_scan;
 331:			int num_readings = vdDistM.size();
 332:	  		start_scan = 0;
@@ -402,29 +402,29 @@
 395:			ROS_DEBUG("...publishing LaserScan message");
 396:			nodeClass.publishLaserScan(vdDistM, vdAngRAD, vdIntensAU, iSickTimeStamp, iSickNow);
 397:			ROS_WARN("...no Scan available");
-398:		ros::spinOnce();
+398:<font color="#FF0000">		ros::spinOnce();</font>{}
 399:		loop_rate.sleep();
 400:	return 0;
 401:<font color="#FF0000">		ros::NodeHandle nodeHandle;</font>{}
-402:    	message_filters::Subscriber<sensor_msgs::LaserScan> * topicSub_LaserFront;
-403:		message_filters::Subscriber<sensor_msgs::LaserScan> * topicSub_LaserBack;
+402:<font color="#FF0000">    	message_filters::Subscriber<sensor_msgs::LaserScan> * topicSub_LaserFront;</font>{}
+403:<font color="#FF0000">		message_filters::Subscriber<sensor_msgs::LaserScan> * topicSub_LaserBack;</font>{}
 404:        message_filters::TimeSynchronizer<sensor_msgs::LaserScan, sensor_msgs::LaserScan> *sync;
-405:		tf::TransformListener listener_;
+405:<font color="#FF0000">		tf::TransformListener listener_;</font>{}
 406:		laser_geometry::LaserProjection projector_;
 407:<font color="#FF0000">		ros::Publisher topicPub_LaserUnified;</font>{}
 408:		tf::StampedTransform transform_scan_front;
 409:	    tf::StampedTransform transform_scan_back;
-410:<font color="#FF0000">      topicPub_LaserUnified = nodeHandle.advertise<sensor_msgs::LaserScan>("scan_unified", 1);</font>{'type': 'sensor_msgs::LaserScan', 'name': 'scan_unified'}
-411:      topicSub_LaserFront = new message_filters::Subscriber<sensor_msgs::LaserScan>(nodeHandle, "/scan_front", 1);
-412:	  topicSub_LaserBack = new message_filters::Subscriber<sensor_msgs::LaserScan>(nodeHandle, "/scan_rear", 1);
+410:<font color="#FF0000">      topicPub_LaserUnified = nodeHandle.advertise<sensor_msgs::LaserScan>("scan_unified", 1);</font>{}
+411:<font color="#FF0000">      topicSub_LaserFront = new message_filters::Subscriber<sensor_msgs::LaserScan>(nodeHandle, "/scan_front", 1);</font>{}
+412:<font color="#FF0000">	  topicSub_LaserBack = new message_filters::Subscriber<sensor_msgs::LaserScan>(nodeHandle, "/scan_rear", 1);</font>{}
 413:	  sync = new message_filters::TimeSynchronizer<sensor_msgs::LaserScan, sensor_msgs::LaserScan>(*topicSub_LaserFront, *topicSub_LaserBack, 10);
 414:	  sync->registerCallback(boost::bind(&NodeClass::scanCallback, this, _1, _2));
 415:	  sensor_msgs::LaserScan laserUnified;
 416:	  sensor_msgs::PointCloud cloud_front;
-417:	  listener_.waitForTransform("/base_link", scan_front->header.frame_id, scan_front->header.stamp, ros::Duration(15.0));
+417:<font color="#FF0000">	  listener_.waitForTransform("/base_link", scan_front->header.frame_id, scan_front->header.stamp, ros::Duration(15.0));</font>{}
 418:	  projector_.transformLaserScanToPointCloud("/base_link",*scan_front, cloud_front, listener_);
 419:	  sensor_msgs::PointCloud cloud_rear;
-420:	  listener_.waitForTransform("/base_link", scan_rear->header.frame_id, scan_rear->header.stamp, ros::Duration(15.0));
+420:<font color="#FF0000">	  listener_.waitForTransform("/base_link", scan_rear->header.frame_id, scan_rear->header.stamp, ros::Duration(15.0));</font>{}
 421:	  projector_.transformLaserScanToPointCloud("/base_link",*scan_rear, cloud_rear, listener_);
 422:	  laserUnified.header = scan_front->header;
 423:      laserUnified.header.frame_id = "base_link";

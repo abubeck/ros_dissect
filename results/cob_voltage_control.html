@@ -5,104 +5,104 @@
         <tr>
 
         <td><pre style="border: 1px solid #888;padding: 2px">
-	double min_voltage;
-	double max_voltage;
-	double max_voltage_res;
-	int num_voltage_port;
-	int num_em_stop_port;
-	int num_scanner_em_port;
-};
-	pr2_msgs::PowerBoardState out_pub_em_stop_state_;
-	pr2_msgs::PowerState out_pub_powerstate_;
-  cob_relayboard::EmergencyStopState out_pub_relayboard_state;
-};
-	CPhidgetInterfaceKitHandle IFK;
-    	int numInputs, numOutputs, numSensors, numAnalog;
-    	int err;
-    	IFK = 0;
-		CPhidget_enableLogging(PHIDGET_LOG_VERBOSE, NULL);
-		CPhidgetInterfaceKit_create(&IFK);
-		CPhidget_open((CPhidgetHandle)IFK, -1);
-		ROS_INFO("waiting for phidgets attachement...");
-			const char *errStr;
-			CPhidget_getErrorDescription(err, &errStr);
-			ROS_ERROR("Error waiting for attachment: (%d): %s",err,errStr);
-			return;
-		ROS_INFO("... attached");
-		int sernum, version;
-		const char *deviceptr, *label;
-		CPhidget_getDeviceType((CPhidgetHandle)IFK, &deviceptr);
-		CPhidget_getSerialNumber((CPhidgetHandle)IFK, &sernum);
-		CPhidget_getDeviceVersion((CPhidgetHandle)IFK, &version);
-		CPhidget_getDeviceLabel((CPhidgetHandle)IFK, &label);
-		ROS_INFO("%s", deviceptr);
-		ROS_INFO("Version: %8d SerialNumber: %10d", version, sernum);
-		ROS_INFO("Label: %s", label);
-		CPhidgetInterfaceKit_getOutputCount((CPhidgetInterfaceKitHandle)IFK, &numOutputs);
-		CPhidgetInterfaceKit_getInputCount((CPhidgetInterfaceKitHandle)IFK, &numInputs);
-		CPhidgetInterfaceKit_getSensorCount((CPhidgetInterfaceKitHandle)IFK, &numSensors);
-		ROS_INFO("Sensors:%d Inputs:%d Outputs:%d", numSensors, numInputs, numOutputs);
-    	int em_stop_State = -1;
-    	int scanner_stop_State = -1;
-    	CPhidgetInterfaceKit_getInputState ((CPhidgetInterfaceKitHandle)IFK, config.num_em_stop_port, &em_stop_State);
-    	CPhidgetInterfaceKit_getInputState ((CPhidgetInterfaceKitHandle)IFK, config.num_scanner_em_port, &scanner_stop_State);
-    	ROS_DEBUG("DIO: %d %d", em_stop_State, scanner_stop_State);
-	data.out_pub_em_stop_state_.header.stamp = ros::Time::now();
-		data.out_pub_em_stop_state_.run_stop = true;
-		data.out_pub_relayboard_state.emergency_state = 2;
-                	data.out_pub_em_stop_state_.wireless_stop = true;
-                	data.out_pub_em_stop_state_.wireless_stop = false;
-			data.out_pub_relayboard_state.emergency_state = 1;
-		data.out_pub_em_stop_state_.run_stop = false;
-		data.out_pub_em_stop_state_.wireless_stop = true;
-		data.out_pub_relayboard_state.emergency_state = 1;
-	data.out_pub_relayboard_state.emergency_button_stop = data.out_pub_em_stop_state_.run_stop;
-	data.out_pub_relayboard_state.scanner_stop = data.out_pub_em_stop_state_.wireless_stop;
-		int voltageState = -1;
-		CPhidgetInterfaceKit_getSensorValue((CPhidgetInterfaceKitHandle)IFK, config.num_voltage_port, &voltageState);
-		ROS_DEBUG("Sensor: %d", voltageState);
-		double max_counts = 999.0;
-		double voltage = voltageState * config.max_voltage_res/max_counts;
-		ROS_DEBUG("Current voltage %f", voltage);
-		double percentage =  (voltage - config.min_voltage) * 100/(config.max_voltage - config.min_voltage);
-		data.out_pub_powerstate_.header.stamp = ros::Time::now();
-		data.out_pub_powerstate_.power_consumption = 0.0;
-		data.out_pub_powerstate_.time_remaining = ros::Duration(1000);
-		data.out_pub_powerstate_.relative_capacity = percentage;
-    	CPhidget_close((CPhidgetHandle)IFK);
-    	CPhidget_delete((CPhidgetHandle)IFK);
-};
-<font color="#FF0000">		ros::NodeHandle n_;</font>{}
-<font color="#FF0000">		ros::Publisher pub_em_stop_state__;</font>{}
-<font color="#FF0000">		ros::Publisher pub_powerstate__;</font>{}
-<font color="#FF0000">		ros::Publisher pub_relayboard_state__;</font>{}
-        cob_voltage_control_data component_data_;
-	cob_voltage_control_config component_config_;
-        cob_voltage_control_impl component_implementation_;
-<font color="#FF0000">        	pub_em_stop_state__ = n_.advertise<pr2_msgs::PowerBoardState>("pub_em_stop_state_", 1);</font>{'type': 'pr2_msgs::PowerBoardState', 'name': 'pub_em_stop_state_'}
-<font color="#FF0000">        	pub_powerstate__ = n_.advertise<pr2_msgs::PowerState>("pub_powerstate_", 1);</font>{'type': 'pr2_msgs::PowerState', 'name': 'pub_powerstate_'}
-<font color="#FF0000">	        pub_relayboard_state__ = n_.advertise<cob_relayboard::EmergencyStopState>("pub_relayboard_state_", 1);</font>{'type': 'cob_relayboard::EmergencyStopState', 'name': 'pub_relayboard_state_'}
-<font color="#00FF00">		n_.param("battery_max_voltage", component_config_.max_voltage, 50.0);</font>{}
-<font color="#00FF00">		n_.param("battery_min_voltage", component_config_.min_voltage, 44.0);</font>{}
-<font color="#00FF00">		n_.param("robot_max_voltage", component_config_.max_voltage_res, 70.0);</font>{}
-<font color="#00FF00">		n_.param("voltage_analog_port", component_config_.num_voltage_port, 1);</font>{}
-<font color="#00FF00">		n_.param("em_stop_dio_port", component_config_.num_em_stop_port, 0);</font>{}
-<font color="#00FF00">		n_.param("scanner_stop_dio_port", component_config_.num_scanner_em_port, 1);</font>{}
-            component_implementation_.configure();
-            component_implementation_.update(component_data_, component_config_);
-<font color="#FF0000">            pub_em_stop_state__.publish(component_data_.out_pub_em_stop_state_);</font>{}
-<font color="#FF0000">            pub_powerstate__.publish(component_data_.out_pub_powerstate_);</font>{}
-<font color="#FF0000">	    pub_relayboard_state__.publish(component_data_.out_pub_relayboard_state);</font>{}
-};
-<font color="#FF0000">	ros::init(argc, argv, "cob_voltage_control");</font>{}
-	cob_voltage_control_ros node;
-    ROS_INFO("blub");
-    node.configure();
- 	ros::Rate loop_rate(100);
-        node.update();
-		loop_rate.sleep();
-		ros::spinOnce();
-    return 0;
+1:	double min_voltage;
+2:	double max_voltage;
+3:	double max_voltage_res;
+4:	int num_voltage_port;
+5:	int num_em_stop_port;
+6:	int num_scanner_em_port;
+7:};
+8:	pr2_msgs::PowerBoardState out_pub_em_stop_state_;
+9:	pr2_msgs::PowerState out_pub_powerstate_;
+10:  cob_relayboard::EmergencyStopState out_pub_relayboard_state;
+11:};
+12:	CPhidgetInterfaceKitHandle IFK;
+13:    	int numInputs, numOutputs, numSensors, numAnalog;
+14:    	int err;
+15:    	IFK = 0;
+16:		CPhidget_enableLogging(PHIDGET_LOG_VERBOSE, NULL);
+17:		CPhidgetInterfaceKit_create(&IFK);
+18:		CPhidget_open((CPhidgetHandle)IFK, -1);
+19:		ROS_INFO("waiting for phidgets attachement...");
+20:			const char *errStr;
+21:			CPhidget_getErrorDescription(err, &errStr);
+22:			ROS_ERROR("Error waiting for attachment: (%d): %s",err,errStr);
+23:			return;
+24:		ROS_INFO("... attached");
+25:		int sernum, version;
+26:		const char *deviceptr, *label;
+27:		CPhidget_getDeviceType((CPhidgetHandle)IFK, &deviceptr);
+28:		CPhidget_getSerialNumber((CPhidgetHandle)IFK, &sernum);
+29:		CPhidget_getDeviceVersion((CPhidgetHandle)IFK, &version);
+30:		CPhidget_getDeviceLabel((CPhidgetHandle)IFK, &label);
+31:		ROS_INFO("%s", deviceptr);
+32:		ROS_INFO("Version: %8d SerialNumber: %10d", version, sernum);
+33:		ROS_INFO("Label: %s", label);
+34:		CPhidgetInterfaceKit_getOutputCount((CPhidgetInterfaceKitHandle)IFK, &numOutputs);
+35:		CPhidgetInterfaceKit_getInputCount((CPhidgetInterfaceKitHandle)IFK, &numInputs);
+36:		CPhidgetInterfaceKit_getSensorCount((CPhidgetInterfaceKitHandle)IFK, &numSensors);
+37:		ROS_INFO("Sensors:%d Inputs:%d Outputs:%d", numSensors, numInputs, numOutputs);
+38:    	int em_stop_State = -1;
+39:    	int scanner_stop_State = -1;
+40:    	CPhidgetInterfaceKit_getInputState ((CPhidgetInterfaceKitHandle)IFK, config.num_em_stop_port, &em_stop_State);
+41:    	CPhidgetInterfaceKit_getInputState ((CPhidgetInterfaceKitHandle)IFK, config.num_scanner_em_port, &scanner_stop_State);
+42:    	ROS_DEBUG("DIO: %d %d", em_stop_State, scanner_stop_State);
+43:	data.out_pub_em_stop_state_.header.stamp = ros::Time::now();
+44:		data.out_pub_em_stop_state_.run_stop = true;
+45:		data.out_pub_relayboard_state.emergency_state = 2;
+46:                	data.out_pub_em_stop_state_.wireless_stop = true;
+47:                	data.out_pub_em_stop_state_.wireless_stop = false;
+48:			data.out_pub_relayboard_state.emergency_state = 1;
+49:		data.out_pub_em_stop_state_.run_stop = false;
+50:		data.out_pub_em_stop_state_.wireless_stop = true;
+51:		data.out_pub_relayboard_state.emergency_state = 1;
+52:	data.out_pub_relayboard_state.emergency_button_stop = data.out_pub_em_stop_state_.run_stop;
+53:	data.out_pub_relayboard_state.scanner_stop = data.out_pub_em_stop_state_.wireless_stop;
+54:		int voltageState = -1;
+55:		CPhidgetInterfaceKit_getSensorValue((CPhidgetInterfaceKitHandle)IFK, config.num_voltage_port, &voltageState);
+56:		ROS_DEBUG("Sensor: %d", voltageState);
+57:		double max_counts = 999.0;
+58:		double voltage = voltageState * config.max_voltage_res/max_counts;
+59:		ROS_DEBUG("Current voltage %f", voltage);
+60:		double percentage =  (voltage - config.min_voltage) * 100/(config.max_voltage - config.min_voltage);
+61:		data.out_pub_powerstate_.header.stamp = ros::Time::now();
+62:		data.out_pub_powerstate_.power_consumption = 0.0;
+63:		data.out_pub_powerstate_.time_remaining = ros::Duration(1000);
+64:		data.out_pub_powerstate_.relative_capacity = percentage;
+65:    	CPhidget_close((CPhidgetHandle)IFK);
+66:    	CPhidget_delete((CPhidgetHandle)IFK);
+67:};
+68:        cob_voltage_control_data component_data_;
+69:	cob_voltage_control_config component_config_;
+70:        cob_voltage_control_impl component_implementation_;
+71:<font color="#FF0000">		ros::NodeHandle n_;</font>{}
+72:<font color="#FF0000">		ros::Publisher pub_em_stop_state__;</font>{}
+73:<font color="#FF0000">		ros::Publisher pub_powerstate__;</font>{}
+74:<font color="#FF0000">		ros::Publisher pub_relayboard_state__;</font>{}
+75:<font color="#FF0000">        	pub_em_stop_state__ = n_.advertise<pr2_msgs::PowerBoardState>("pub_em_stop_state_", 1);</font>{}
+76:<font color="#FF0000">        	pub_powerstate__ = n_.advertise<pr2_msgs::PowerState>("pub_powerstate_", 1);</font>{}
+77:<font color="#FF0000">	        pub_relayboard_state__ = n_.advertise<cob_relayboard::EmergencyStopState>("pub_relayboard_state_", 1);</font>{}
+78:<font color="#00FF00">		n_.param("battery_max_voltage", component_config_.max_voltage, 50.0);</font>{}
+79:<font color="#00FF00">		n_.param("battery_min_voltage", component_config_.min_voltage, 44.0);</font>{}
+80:<font color="#00FF00">		n_.param("robot_max_voltage", component_config_.max_voltage_res, 70.0);</font>{}
+81:<font color="#00FF00">		n_.param("voltage_analog_port", component_config_.num_voltage_port, 1);</font>{}
+82:<font color="#00FF00">		n_.param("em_stop_dio_port", component_config_.num_em_stop_port, 0);</font>{}
+83:<font color="#00FF00">		n_.param("scanner_stop_dio_port", component_config_.num_scanner_em_port, 1);</font>{}
+84:            component_implementation_.update(component_data_, component_config_);
+85:<font color="#FF0000">            pub_em_stop_state__.publish(component_data_.out_pub_em_stop_state_);</font>{}
+86:<font color="#FF0000">            pub_powerstate__.publish(component_data_.out_pub_powerstate_);</font>{}
+87:<font color="#FF0000">	    pub_relayboard_state__.publish(component_data_.out_pub_relayboard_state);</font>{}
+88:            component_implementation_.configure();
+89:};
+90:<font color="#FF0000">	ros::init(argc, argv, "cob_voltage_control");</font>{}
+91:	cob_voltage_control_ros node;
+92:    ROS_INFO("blub");
+93:    node.configure();
+94: 	ros::Rate loop_rate(100);
+95:        node.update();
+96:		loop_rate.sleep();
+97:<font color="#FF0000">		ros::spinOnce();</font>{}
+98:    return 0;
 </pre>
 </body>
 </html>

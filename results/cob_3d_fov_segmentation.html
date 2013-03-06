@@ -101,7 +101,7 @@
 94:using namespace tf;
 95:using namespace cob_3d_mapping;
 96:    config_server_.setCallback(boost::bind(&FieldOfViewNode::dynReconfCallback, this, _1, _2));
-97:<font color="#FF0000">    fov_marker_pub_ = n_.advertise<visualization_msgs::Marker>("fov_marker",1);</font>{'type': 'visualization_msgs::Marker', 'name': 'fov_marker'}
+97:<font color="#FF0000">    fov_marker_pub_ = n_.advertise<visualization_msgs::Marker>("fov_marker",1);</font>{}
 98:    fov_.setSensorFoV_hor(config.sensor_fov_hor_angle);
 99:    fov_.setSensorFoV_ver(config.sensor_fov_ver_angle);
 100:    fov_.setSensorMaxRange(config.sensor_max_range);
@@ -109,8 +109,8 @@
 102:    target_frame_ = config.target_frame;
 103:    fov_.computeFieldOfView();
 104:    StampedTransform st_trf;
-105:      tf_listener_.waitForTransform(target_frame_, camera_frame_, ros::Time(0), ros::Duration(0.1));
-106:      tf_listener_.lookupTransform(target_frame_, camera_frame_, ros::Time(0), st_trf);
+105:<font color="#FF0000">      tf_listener_.waitForTransform(target_frame_, camera_frame_, ros::Time(0), ros::Duration(0.1));</font>{}
+106:<font color="#FF0000">      tf_listener_.lookupTransform(target_frame_, camera_frame_, ros::Time(0), st_trf);</font>{}
 107:      ROS_ERROR("%s",ex.what());
 108:    Eigen::Affine3d trafo;
 109:    TransformTFToEigen(st_trf, trafo);
@@ -185,23 +185,23 @@
 178:<font color="#FF0000">    fov_marker_pub_.publish(marker);</font>{}
 179:<font color="#FF0000">  ros::NodeHandle n_;</font>{}
 180:<font color="#FF0000">  ros::Publisher fov_marker_pub_;</font>{}
-181:  TransformListener tf_listener_;
+181:<font color="#FF0000">  TransformListener tf_listener_;</font>{}
 182:  dynamic_reconfigure::Server<cob_3d_fov_segmentation::field_of_viewConfig> config_server_;
 183:  std::string camera_frame_;
 184:  std::string target_frame_;
 185:  FieldOfView fov_;
 186:};
-187:  ros::init (argc, argv, "field_of_view");
+187:<font color="#FF0000">  ros::init (argc, argv, "field_of_view");</font>{}
 188:  FieldOfViewNode fov;
 189:  ros::Rate loop_rate(10);
-190:    ros::spinOnce ();
+190:<font color="#FF0000">    ros::spinOnce ();</font>{}
 191:    fov.transformFOV();
 192:    loop_rate.sleep();
 193:using namespace tf;
 194:using namespace cob_3d_mapping;
 195:  config_server_.setCallback(boost::bind(&FOVSegmentationNode::dynReconfCallback, this, _1, _2));
 196:<font color="#FF0000">  shape_sub_ = n_.subscribe("shape_array_in", 10, &FOVSegmentationNode::shapeCallback, this);</font>{}
-197:<font color="#FF0000">  shape_pub_ = n_.advertise<cob_3d_mapping_msgs::ShapeArray>("shape_array_out",1);</font>{'type': 'cob_3d_mapping_msgs::ShapeArray', 'name': 'shape_array_out'}
+197:<font color="#FF0000">  shape_pub_ = n_.advertise<cob_3d_mapping_msgs::ShapeArray>("shape_array_out",1);</font>{}
 198:    fov_.setSensorFoV_hor(config.sensor_fov_hor_angle);
 199:    fov_.setSensorFoV_ver(config.sensor_fov_ver_angle);
 200:    fov_.setSensorMaxRange(config.sensor_max_range);
@@ -209,8 +209,8 @@
 202:    target_frame_ = config.target_frame;
 203:    fov_.computeFieldOfView();
 204:  StampedTransform st_trf;
-205:    tf_listener_.waitForTransform(target_frame_, camera_frame_, ros::Time(0), ros::Duration(0.1));
-206:    tf_listener_.lookupTransform(target_frame_, camera_frame_, ros::Time(0), st_trf);
+205:<font color="#FF0000">    tf_listener_.waitForTransform(target_frame_, camera_frame_, ros::Time(0), ros::Duration(0.1));</font>{}
+206:<font color="#FF0000">    tf_listener_.lookupTransform(target_frame_, camera_frame_, ros::Time(0), st_trf);</font>{}
 207:    ROS_ERROR("%s",ex.what());
 208:  Eigen::Affine3d trafo;
 209:  TransformTFToEigen(st_trf, trafo);
@@ -234,10 +234,10 @@
 227:    toROSMsg(*polys_out[i], s);
 228:    sa_out.shapes.push_back(s);
 229:<font color="#FF0000">  shape_pub_.publish(sa_out);</font>{}
-230:  ros::init (argc, argv, "fov_segmentation_node");
+230:<font color="#FF0000">  ros::init (argc, argv, "fov_segmentation_node");</font>{}
 231:  FOVSegmentationNode fov;
 232:  ros::Rate loop_rate(10);
-233:    ros::spinOnce ();
+233:<font color="#FF0000">    ros::spinOnce ();</font>{}
 234:    loop_rate.sleep();
 </pre>
 </body>

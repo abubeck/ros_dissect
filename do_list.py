@@ -2,7 +2,7 @@
 import shutil
 from code_analyse import *
 
-packages = ["cob_base_velocity_smoother","cob_collision_velocity_filter", "cob_footprint_observer", "cob_3d_fov_segmentation", "cob_read_text", "cob_marker", "cob_kuka_rsi", "cob_kinematics", "cob_linear_nav", "cob_trajectory_controller", "cob_sick_s300", "cob_phidgets"]
+packages = ["cob_base_velocity_smoother","cob_collision_velocity_filter", "cob_footprint_observer", "cob_3d_fov_segmentation", "cob_read_text", "cob_marker", "cob_kuka_rsi", "cob_kinematics", "cob_linear_nav", "cob_trajectory_controller", "cob_sick_s300", "cob_phidgets", "cob_voltage_control"]
 
 if __name__ == "__main__":
 	w = RosWiki()

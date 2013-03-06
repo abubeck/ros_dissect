@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
-	TUT: 	ros::init(argc, argv, "cob_voltage_control");{}
-		<publisher name="pub_em_stop_state_" eventHandler="" msg="pr2_msgs::PowerBoardState"/>
-		<publisher name="pub_powerstate_" eventHandler="" msg="pr2_msgs::PowerState"/>
-		<publisher name="pub_relayboard_state_" eventHandler="" msg="cob_relayboard::EmergencyStopState"/>
 	</node>
 </ros:Package>

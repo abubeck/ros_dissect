@@ -8,15 +8,15 @@
 1:<font color="#FF0000">	ros::NodeHandle nh_;</font>{}
 2:<font color="#FF0000">	ros::Publisher topic_pub_command_;</font>{}
 3:<font color="#FF0000">	ros::Subscriber goal_sub_, odometry_sub_;</font>{}
-4:	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> as_;
+4:<font color="#FF0000">	actionlib::SimpleActionServer<move_base_msgs::MoveBaseAction> as_;</font>{}
 5:	move_base_msgs::MoveBaseResult result_;
-6:	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> * action_client_;
+6:<font color="#FF0000">	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> * action_client_;</font>{}
 7:		m_mutex = PTHREAD_MUTEX_INITIALIZER;
 8:<font color="#FF0000">    ros::NodeHandle private_nh("~");</font>{}
-9:<font color="#FF0000">		topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);</font>{'type': 'geometry_msgs::Twist', 'name': 'cmd_vel'}
+9:<font color="#FF0000">		topic_pub_command_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);</font>{}
 10:<font color="#FF0000">		ros::NodeHandle simple_nh("move_base_linear_simple");</font>{}
 11:<font color="#FF0000">		goal_sub_ = simple_nh.subscribe<geometry_msgs::PoseStamped>("goal", 1, boost::bind(&NodeClass::topicCB, this, _1));</font>{'type': 'geometry_msgs::PoseStamped', 'name': 'goal'}
-12:		action_client_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>(nh_, name);
+12:<font color="#FF0000">		action_client_ = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>(nh_, name);</font>{}
 13:<font color="#FF0000">		odometry_sub_ = nh_.subscribe<nav_msgs::Odometry>("odom", 1, boost::bind(&NodeClass::odometryCB, this, _1));</font>{'type': 'nav_msgs::Odometry', 'name': 'odom'}
 14:<font color="#00FF00">		if(!private_nh.hasParam("kv")) ROS_WARN("Used default parameter for kv [2.5]");</font>{}
 15:<font color="#00FF00">		private_nh.param("kv", kv_, 2.5);</font>{}
@@ -57,7 +57,7 @@
 50:		zero_pose_.header.frame_id = robot_frame_;
 51:		ros::Time last_error = ros::Time::now();
 52:		std::string tf_error;
-53:			ros::spinOnce();
+53:<font color="#FF0000">			ros::spinOnce();</font>{}
 54:				robot_frame_.c_str(), global_frame_.c_str(), tf_error.c_str());
 55:				last_error = ros::Time::now();
 56:		as_.start();
@@ -107,7 +107,7 @@
 100:		vec_stamped.vector = odometry->twist.twist.angular;
 101:		vec_stamped.header.frame_id =  "/base_footprint";
 102:		tf_listener_.transformVector(robot_frame_, vec_stamped, robot_twist_angular_robot_);
-103:	tf::TransformListener tf_listener_;
+103:<font color="#FF0000">	tf::TransformListener tf_listener_;</font>{}
 104:	std::string global_frame_, robot_frame_;
 105:	geometry_msgs::PoseStamped goal_pose_global_;
 106:	geometry_msgs::PoseStamped zero_pose_;

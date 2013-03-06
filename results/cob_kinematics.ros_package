@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="parsing_of_manifest_missing" author="Alexander Bubeck" description="missing">
-	TUT:     ros::init(argc,argv,"ik_wrapper_node");{}
 		<parameter name="srvs_prefix" value="/cob_arm_kinematics/" type="std::string/>
 		<parameter name="ik_srv" value=prefix+"get_ik" type="std::string/>
 		<parameter name="fk_srv" value=prefix+"get_fk" type="std::string/>

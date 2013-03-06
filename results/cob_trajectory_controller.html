@@ -390,7 +390,7 @@
 383:	sendVel(q_dot);
 384:<font color="#FF0000">	ros::init(argc, argv, "cob_simulation_tester");</font>{}
 385:<font color="#FF0000">	ros::NodeHandle n;</font>{}
-386:<font color="#FF0000">	arm_pub_ = n.advertise<trajectory_msgs::JointTrajectory>("/arm_controller/command",1);</font>{'type': 'trajectory_msgs::JointTrajectory', 'name': '/arm_controller/command'}
+386:<font color="#FF0000">	arm_pub_ = n.advertise<trajectory_msgs::JointTrajectory>("/arm_controller/command",1);</font>{}
 387:<font color="#FF0000">	ros::Subscriber sub = n.subscribe("/joint_states", 1, controllerStateCallback);</font>{}
 388:<font color="#FF0000">	ros::Subscriber sub_vc = n.subscribe("/arm_controller/command_vel", 1, velocityCallback);</font>{}
 389:<font color="#FF0000">	serv_reset = n.advertiseService("reset_brics_interface", resetCB);</font>{}
@@ -404,7 +404,7 @@
 397:<font color="#FF0000">    ros::ServiceServer srvServer_SetVel_;</font>{}
 398:<font color="#FF0000">    ros::ServiceServer srvServer_SetAcc_;</font>{}
 399:<font color="#FF0000"> 	ros::ServiceClient srvClient_SetOperationMode;</font>{}
-400:    actionlib::SimpleActionServer<control_msgs::FollowJointTrajectoryAction> as_follow_;
+400:<font color="#FF0000">    actionlib::SimpleActionServer<control_msgs::FollowJointTrajectoryAction> as_follow_;</font>{}
 401:    std::string action_name_follow_;
 402:    std::string current_operation_mode_;
 403:    XmlRpc::XmlRpcValue JointNames_param_;
@@ -420,7 +420,7 @@
 413:    trajectory_msgs::JointTrajectory traj_;
 414:    trajectory_msgs::JointTrajectory traj_2_;
 415:    std::vector<double> q_current, startposition_, joint_distance_;
-416:<font color="#FF0000">		joint_vel_pub_ = n_.advertise<brics_actuator::JointVelocities>("command_vel", 1);</font>{'type': 'brics_actuator::JointVelocities', 'name': 'command_vel'}
+416:<font color="#FF0000">		joint_vel_pub_ = n_.advertise<brics_actuator::JointVelocities>("command_vel", 1);</font>{}
 417:<font color="#FF0000">        controller_state_ = n_.subscribe("state", 1, &cob_trajectory_controller_node::state_callback, this);</font>{}
 418:<font color="#FF0000">		operation_mode_ = n_.subscribe("current_operationmode", 1, &cob_trajectory_controller_node::operationmode_callback, this);</font>{}
 419:<font color="#FF0000">		srvServer_Stop_ = n_.advertiseService("stop", &cob_trajectory_controller_node::srvCallback_Stop, this);</font>{}
@@ -607,7 +607,7 @@
 600:    double frequency = tm.getFrequency();
 601:    ros::Rate loop_rate(frequency);
 602:        tm.run();
-603:        ros::spinOnce();
+603:<font color="#FF0000">        ros::spinOnce();</font>{}
 604:        loop_rate.sleep();
 </pre>
 </body>

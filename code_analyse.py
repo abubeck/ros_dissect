@@ -45,7 +45,7 @@ class RosWiki:
                 f.write( "\t\t<parameter name=\"" + line[3]['name']+ "\" value=" + line[3]['default'] + " type=\"" + line[3]['type']+ "/>\n")
         #Create publishers
         for line in code:
-            if(line[1] == "pub"):
+            if(line[1] == "pub_val"):
                 f.write( "\t\t<publisher name=\"" + line[3]['name'] + "\" eventHandler=\"\" msg=\"" + line[3]['type'] + "\"/>\n")
         #Create subscribers
         for line in code:

@@ -7,7 +7,7 @@
         <td><pre style="border: 1px solid #888;padding: 2px">
 1:<font color="#FF0000">  nh_ = ros::NodeHandle("~");</font>{}
 2:  m_mutex = PTHREAD_MUTEX_INITIALIZER;
-3:<font color="#FF0000">  topic_pub_footprint_ = nh_.advertise<geometry_msgs::PolygonStamped>("adjusted_footprint",1);</font>{'type': 'geometry_msgs::PolygonStamped', 'name': 'adjusted_footprint'}
+3:<font color="#FF0000">  topic_pub_footprint_ = nh_.advertise<geometry_msgs::PolygonStamped>("adjusted_footprint",1);</font>{}
 4:<font color="#FF0000">  srv_get_footprint_ = nh_.advertiseService("/get_footprint", &FootprintObserver::getFootprintCB, this);</font>{}
 5:  std::string footprint_source;
 6:<font color="#00FF00">  if(!nh_.hasParam("footprint_source")) ROS_WARN("Checking default location (/local_costmap_node/costmap) for initial footprint parameter.");</font>{}
@@ -41,7 +41,7 @@
 34:  XmlRpc::XmlRpcValue footprint_list;
 35:  std::string footprint_string;
 36:  std::vector<std::string> footstring_list;
-37:    node.getParam(footprint_param, footprint_list);
+37:<font color="#00FF00">    node.getParam(footprint_param, footprint_list);</font>{}
 38:      footprint_string = std::string(footprint_list);
 39:        return footprint;
 40:      boost::erase_all(footprint_string, " ");
@@ -125,7 +125,7 @@
 118:  y_right = footprint_right_initial_;
 119:  bool missing_frame_exists = false;
 120:      tf::StampedTransform transform;
-121:      tf_listener_.lookupTransform(robot_base_frame_, frame, ros::Time(0), transform);
+121:<font color="#FF0000">      tf_listener_.lookupTransform(robot_base_frame_, frame, ros::Time(0), transform);</font>{}
 122:      tf::Vector3 frame_position = transform.getOrigin();
 123:      if(frame_position.x() > x_front) x_front = frame_position.x();
 124:      if(frame_position.x() < x_rear) x_rear = frame_position.x();
@@ -172,7 +172,7 @@
 165:  FootprintObserver footprintObserver;
 166:  ros::Rate loop_rate(30);
 167:    footprintObserver.checkFootprint();
-168:    ros::spinOnce();
+168:<font color="#FF0000">    ros::spinOnce();</font>{}
 169:    loop_rate.sleep();
 170:  return 0;
 171:};

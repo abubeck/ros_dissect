@@ -12,7 +12,7 @@
 5:	std::string frame_id_;
 6:	char buffer[256];
 7:	sprintf(buffer,"range_%d",id);
-8:	pub_range_ = n_.advertise<sensor_msgs::Range>(buffer, 0);
+8:<font color="#FF0000">	pub_range_ = n_.advertise<sensor_msgs::Range>(buffer, 0);</font>{}
 9:<font color="#FF0000">	pub_range_.publish((sensor_msgs::Range)*this);</font>{}
 10:	sensor_msgs::Range msg;
 11:	msg.header.stamp = ros::Time::now();
@@ -63,7 +63,7 @@
 56:	int filter = v.size()>2?(int)v[i][2]:10;
 57:	g_sensors.push_back(Sensor(fr_id,id,filter));
 58:				ROS_ERROR("Parameter sensors not set, shutting down node...");
-59:				nh_.shutdown();
+59:<font color="#FF0000">				nh_.shutdown();</font>{}
 60:				return false;
 61:	ros::Rate loop_rate(10);
 62:	int numInputs, numOutputs, numSensors;
@@ -88,7 +88,7 @@
 81:		for(size_t i=0;
 82:		for(size_t i=0; i<g_sensors.size();
 83:<font color="#FF0000">		for(size_t i=0; i<g_sensors.size(); i++) g_sensors[i].publish();</font>{}
-84:		ros::spinOnce();
+84:<font color="#FF0000">		ros::spinOnce();</font>{}
 85:		loop_rate.sleep();
 86:	CPhidget_close((CPhidgetHandle)IFK);
 87:	CPhidget_delete((CPhidgetHandle)IFK);
