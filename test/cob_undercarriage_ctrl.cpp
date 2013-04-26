@@ -63,23 +63,24 @@
 #include <ros/ros.h>
 
 // ROS message includes
+ 
 #include <sensor_msgs/JointState.h>
 #include <diagnostic_msgs/DiagnosticStatus.h>
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
-#include <cob_relayboard/EmergencyStopState.h>
-#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
+//#include <cob_relayboard/EmergencyStopState.h>
+//#include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 
 
 // ROS service includes
-#include <cob_srvs/Trigger.h>
-#include <cob_base_drive_chain/GetJointState.h>
+//#include <cob_srvs/Trigger.h>
+//#include <cob_base_drive_chain/GetJointState.h>
 
 // external includes
-#include <cob_undercarriage_ctrl/UndercarriageCtrlGeom.h>
-#include <cob_utilities/IniFile.h>
+//#include <cob_undercarriage_ctrl/UndercarriageCtrlGeom.h>
+//#include <cob_utilities/IniFile.h>
 //#include <cob_utilities/MathSup.h>
 
 //####################
@@ -176,7 +177,7 @@ class NodeClass
 			
 			// implementation of topics
             // published topics
-			//topic_pub_joint_state_cmd_ = n.advertise<sensor_msgs::JointState>("joint_command", 1);
+			topic_pub_joint_state_cmd_ = n.advertise<sensor_msgs::JointState>("joint_command", 1);
 			topic_pub_controller_joint_command_ = n.advertise<pr2_controllers_msgs::JointTrajectoryControllerState> ("joint_command", 1);
 
 			topic_pub_odometry_ = n.advertise<nav_msgs::Odometry>("odometry", 1);

@@ -12,6 +12,7 @@ if __name__ == "__main__":
 	package_names = []
 	llocs = []
 	rosllocs = []
+	seps = []
 	for package in packages:
 		print "======================="+ package +"======================================"
 		p = Parser(package)
@@ -25,6 +26,7 @@ if __name__ == "__main__":
 		package_names.append(package)
 		llocs.append(lloc)
 		rosllocs.append(num_of_param + num_of_comm)
+		seps.append(sep)
 		print "========================================================================"
 		print ""
 	f.close()
@@ -35,12 +37,14 @@ if __name__ == "__main__":
 		fig = plt.figure()
 		ax = fig.add_subplot(1,1,1)
 		x = range(len(package_names))
-		ax.bar(x, llocs,color='r', align='center')
-		ax.bar(x, rosllocs,color='y', align='center')
+		#ax.bar(x, llocs,color='#F90101', align='center')
+		#ax.bar(x, rosllocs,color='#00933B', align='center')
+		ax.bar(x, seps,color='#0266C8', align='center')
 		ax.set_xticks(x)
 		ax.set_xticks(x)
 		ax.set_xticklabels(package_names)
 		ax.set_title('Code amount, by package',fontstyle='italic')
 		plt.ylabel('Logical lines of code')
+		fig.set_facecolor('white')
 		fig.autofmt_xdate()
 		plt.show()
