@@ -44,11 +44,12 @@ def show_type(t, level, title):
 def show_ast(cursor, filter_pred=verbose, level=Level()):
     '''pretty print cursor AST'''
     if filter_pred(cursor, level):
-        if(cursor.location.file.name == the_location):
-            level.show(cursor.kind, cursor.spelling, cursor.displayname, cursor.location)
-            if is_valid_type(cursor.type):
-                show_type(cursor.type, level+1, 'type:')
-                show_type(cursor.type.get_canonical(), level+1, 'canonical type:')
+        #if(cursor.location.file.name == the_location):
+            #level.show(cursor.kind, cursor.spelling, cursor.displayname, cursor.location)
+            #if is_valid_type(cursor.type):
+                #show_type(cursor.type, level+1, 'type:')
+                #show_type(cursor.type.get_canonical(), level+1, 'canonical type:')
+            print cursor.location.file.name
             for c in cursor.get_children():
                 show_ast(c, filter_pred, level+1)
 
